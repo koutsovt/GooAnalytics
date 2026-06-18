@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terence London — Deep Dive: What the data says to improve the site</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1916;--ink-soft:#5a534b;--ivory:#f7f2e9;--paper:#fffdf8;
+    --line:#e3dac9;--gold:#a9772f;--gold-soft:#c9a35e;--oxblood:#6e2b2b;--sage:#7d8466;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{
+    font-family:'Jost',-apple-system,sans-serif;background:var(--ivory);color:var(--ink);
+    line-height:1.5;padding:48px 24px;
+    background-image:radial-gradient(circle at 18% 12%, rgba(201,163,94,.07), transparent 38%),
+                     radial-gradient(circle at 90% 80%, rgba(110,43,43,.05), transparent 40%);
+  }
+  .sheet{max-width:860px;margin:0 auto;background:var(--paper);border:1px solid var(--line);
+    box-shadow:0 30px 60px -30px rgba(28,25,22,.28);position:relative;overflow:hidden;}
+  .sheet::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg,var(--oxblood),var(--gold),var(--gold-soft));}
+
+  .masthead{padding:46px 52px 30px;border-bottom:1px solid var(--line);}
+  .kicker{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:16px;}
+  .title{font-family:'Fraunces',serif;font-weight:400;font-size:42px;line-height:1.06;letter-spacing:-.01em;}
+  .title em{font-style:italic;color:var(--oxblood);}
+  .subtitle{margin-top:14px;font-size:14.5px;color:var(--ink-soft);max-width:64ch;line-height:1.55;}
+  .period{margin-top:22px;display:flex;gap:28px;flex-wrap:wrap;font-size:12px;letter-spacing:.04em;color:var(--ink-soft);}
+  .period b{color:var(--ink);font-weight:500;}
+
+  section{padding:34px 52px;border-bottom:1px solid var(--line);}
+  .sec-label{font-family:'Fraunces',serif;font-size:13px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:22px;font-weight:500;display:flex;align-items:center;gap:14px;}
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--line);}
+
+  /* hero / dark block */
+  .hero{background:var(--ink);color:#f4eee3;}
+  .hero .sec-label{color:var(--gold-soft);}
+  .hero .sec-label::after{background:rgba(255,255,255,.14);}
+
+  /* warning block */
+  .warning-block{background:linear-gradient(135deg, #fdf6ec 0%, #fdf0df 100%);border-left:4px solid var(--gold);}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:46px;}
+  @media(max-width:720px){.cols{grid-template-columns:1fr;gap:34px;}}
+
+  .bar-row{margin-bottom:15px;}
+  .bar-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:5px;}
+  .bar-head .src{font-weight:500;}
+  .bar-head .src small{color:var(--ink-soft);font-weight:400;}
+  .bar-head .val{font-family:'Fraunces',serif;font-size:14px;color:var(--ink-soft);}
+  .track{height:9px;background:var(--ivory);border:1px solid var(--line);overflow:hidden;}
+  .fill{height:100%;background:linear-gradient(90deg,var(--oxblood),var(--gold));}
+  .fill.alt{background:linear-gradient(90deg,#8a8f72,var(--sage));}
+  .fill.dim{background:var(--gold-soft);opacity:.55;}
+
+  .insight{font-size:12.5px;color:var(--ink-soft);margin-top:18px;line-height:1.55;padding:12px 14px;background:var(--ivory);border-left:3px solid var(--gold);border-radius:0 4px 4px 0;}
+  .insight b{color:var(--ink);font-weight:500;}
+
+  /* tables */
+  .data-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .data-table th{text-align:left;font-weight:500;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);padding:8px 12px 8px 0;border-bottom:2px solid var(--line);}
+  .data-table td{padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:middle;}
+  .data-table tr:last-child td{border-bottom:none;}
+  .data-table .num-cell{font-family:'Fraunces',serif;font-size:15px;text-align:right;padding-right:16px;}
+  .data-table .pct-cell{font-size:12px;color:var(--ink-soft);text-align:right;}
+
+  /* 404 list */
+  .url-list{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .url-list li{background:rgba(110,43,43,.12);color:var(--oxblood);font-family:'Jost',monospace;font-size:12.5px;padding:5px 12px;border-radius:4px;font-weight:500;}
+
+  /* stat comparison cards */
+  .stat-compare{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  @media(max-width:720px){.stat-compare{grid-template-columns:1fr;}}
+  .stat-card{padding:28px 32px;}
+  .stat-card:first-child{border-right:1px solid var(--line);}
+  @media(max-width:720px){.stat-card:first-child{border-right:none;border-bottom:1px solid var(--line);}}
+  .stat-card-label{font-family:'Fraunces',serif;font-size:14px;color:var(--gold);font-weight:500;margin-bottom:16px;letter-spacing:.08em;text-transform:uppercase;font-style:italic;}
+  .stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row .stat-label{color:var(--ink-soft);}
+  .stat-row .stat-value{font-family:'Fraunces',serif;font-size:20px;font-weight:400;color:var(--ink);}
+
+  /* hero 404 content */
+  .hero-404-content{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;}
+  @media(max-width:720px){.hero-404-content{grid-template-columns:1fr;}}
+  .hero-404-big{font-family:'Fraunces',serif;font-size:72px;line-height:.9;color:var(--oxblood);font-weight:400;opacity:.85;}
+  .hero-404-text p{font-size:14px;color:#d8cfc0;line-height:1.6;margin-bottom:10px;}
+  .hero-404-text b{color:#fff;font-weight:500;}
+  .hero .url-list li{background:rgba(201,163,94,.18);color:var(--gold-soft);}
+  .hero .insight{background:rgba(255,255,255,.06);border-left-color:var(--gold-soft);color:#cfc6b7;}
+  .hero .insight b{color:#fff;}
+
+  /* dark block comparison table */
+  .hero .data-table{color:#d8cfc0;}
+  .hero .data-table th{color:var(--gold-soft);border-bottom-color:rgba(255,255,255,.14);}
+  .hero .data-table td{border-bottom-color:rgba(255,255,255,.1);}
+  .hero .data-table .num-cell{color:#fff;}
+
+  /* warning table overrides */
+  .warning-block .track{background:#fff;border-color:var(--line);}
+  .warning-block .insight{background:rgba(255,255,255,.6);}
+
+  /* bounce danger row */
+  .danger{color:var(--oxblood);font-weight:500;}
+
+  /* advice section */
+  .advice .sec-label{color:var(--gold);}
+  .adv-item{display:flex;gap:18px;padding:15px 0;border-bottom:1px solid var(--line);}
+  .adv-item:last-child{border-bottom:none;padding-bottom:0;}
+  .adv-num{font-family:'Fraunces',serif;font-style:italic;font-size:26px;color:var(--gold);line-height:1;flex:none;width:34px;}
+  .adv-body h4{font-size:15px;font-weight:500;margin-bottom:4px;}
+  .adv-body p{font-size:13px;color:var(--ink-soft);line-height:1.55;}
+
+  footer{padding:22px 52px 30px;font-size:11px;color:var(--ink-soft);line-height:1.55;}
+  footer .note{display:flex;gap:10px;margin-top:6px;}
+  footer .note::before{content:"—";color:var(--gold);}
+
+  @media print{body{padding:0;background:#fff;}.sheet{box-shadow:none;border:none;max-width:100%;}}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="kicker">Deep Dive · June 2026</div>
+    <h1 class="title">Terence&nbsp;London<br><em>what the data says to improve the site</em></h1>
+    <p class="subtitle">Beyond the monthly numbers — patterns in timing, geography, devices, and user behaviour that point to specific improvements.</p>
+    <div class="period">
+      <span><b>Period</b>&nbsp; Last 30 days, to 4 June 2026</span>
+      <span><b>Source</b>&nbsp; Google Analytics 4</span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: 404 Errors (hero dark) -->
+  <section class="hero">
+    <div class="sec-label">🚨 Critical: 404 errors</div>
+    <div class="hero-404-content">
+      <div>
+        <div class="hero-404-big">11</div>
+        <p style="font-size:12px;color:var(--gold-soft);margin-top:8px;font-family:'Fraunces',serif;font-style:italic;">page views hit<br>a dead end</p>
+      </div>
+      <div class="hero-404-text">
+        <p><b>11 page views</b> from <b>3 users</b> landed on "404: This page could not be found." People are actively trying to reach pages that don't exist.</p>
+        <p style="font-size:12px;color:var(--gold-soft);margin-bottom:6px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;">URLs people tried:</p>
+        <ul class="url-list">
+          <li>/about</li>
+          <li>/contact</li>
+          <li>/book</li>
+          <li>/our-team</li>
+          <li>/our-story</li>
+          <li>/contact-us</li>
+          <li>/about-us</li>
+          <li>/team</li>
+          <li>/story</li>
+        </ul>
+        <div class="insight" style="margin-top:20px;">
+          <b>Recommendation:</b> Add redirects or actual pages — people are actively looking for About, Contact, Book, and Team pages. These are real visitors with intent, hitting a wall.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: When people visit -->
+  <section>
+    <div class="sec-label">When people visit</div>
+    <div class="cols">
+      <!-- Hour of day -->
+      <div>
+        <h3 style="font-family:'Fraunces',serif;font-size:15px;font-weight:500;margin-bottom:16px;color:var(--ink);">Hour of day</h3>
+        <div class="bar-row"><div class="bar-head"><span class="src">7 pm</span><span class="val">18 <small style="color:var(--ink-soft);font-size:11px;">100%</small></span></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">1 pm</span><span class="val">16 <small style="color:var(--ink-soft);font-size:11px;">89%</small></span></div><div class="track"><div class="fill" style="width:89%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">4 pm</span><span class="val">16 <small style="color:var(--ink-soft);font-size:11px;">89%</small></span></div><div class="track"><div class="fill" style="width:89%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">8 pm</span><span class="val">14 <small style="color:var(--ink-soft);font-size:11px;">78%</small></span></div><div class="track"><div class="fill" style="width:78%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">9 am</span><span class="val">13 <small style="color:var(--ink-soft);font-size:11px;">72%</small></span></div><div class="track"><div class="fill" style="width:72%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">9 pm</span><span class="val">11 <small style="color:var(--ink-soft);font-size:11px;">61%</small></span></div><div class="track"><div class="fill" style="width:61%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">10 am</span><span class="val">10 <small style="color:var(--ink-soft);font-size:11px;">56%</small></span></div><div class="track"><div class="fill dim" style="width:56%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">6 pm</span><span class="val">10 <small style="color:var(--ink-soft);font-size:11px;">56%</small></span></div><div class="track"><div class="fill dim" style="width:56%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">8 am</span><span class="val">10 <small style="color:var(--ink-soft);font-size:11px;">56%</small></span></div><div class="track"><div class="fill dim" style="width:56%"></div></div></div>
+        <div class="insight">
+          <b>Evening (7–9 pm) is peak browsing time.</b> Social posts should go out at 6 pm to catch this window.
+        </div>
+      </div>
+      <!-- Day of week -->
+      <div>
+        <h3 style="font-family:'Fraunces',serif;font-size:15px;font-weight:500;margin-bottom:16px;color:var(--ink);">Day of week</h3>
+        <div class="bar-row"><div class="bar-head"><span class="src">Tuesday</span><span class="val">44 <small style="color:var(--ink-soft);font-size:11px;">100%</small></span></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Friday</span><span class="val">31 <small style="color:var(--ink-soft);font-size:11px;">70%</small></span></div><div class="track"><div class="fill" style="width:70%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Wednesday</span><span class="val">28 <small style="color:var(--ink-soft);font-size:11px;">64%</small></span></div><div class="track"><div class="fill" style="width:64%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Saturday</span><span class="val">27 <small style="color:var(--ink-soft);font-size:11px;">61%</small></span></div><div class="track"><div class="fill" style="width:61%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Monday</span><span class="val">21 <small style="color:var(--ink-soft);font-size:11px;">48%</small></span></div><div class="track"><div class="fill alt" style="width:48%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Sunday</span><span class="val">20 <small style="color:var(--ink-soft);font-size:11px;">45%</small></span></div><div class="track"><div class="fill alt" style="width:45%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Thursday</span><span class="val">9 <small style="color:var(--ink-soft);font-size:11px;">20%</small></span></div><div class="track"><div class="fill dim" style="width:20%"></div></div></div>
+        <div class="insight">
+          <b>Thursday is dead</b> (9 sessions vs 44 on Tuesday). A Thursday promotion or a Wednesday evening social post could fill the gap.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: Where visitors are -->
+  <section>
+    <div class="sec-label">Where visitors are</div>
+    <div class="cols">
+      <!-- Top cities -->
+      <div>
+        <h3 style="font-family:'Fraunces',serif;font-size:15px;font-weight:500;margin-bottom:16px;color:var(--ink);">Top cities</h3>
+        <table class="data-table">
+          <thead>
+            <tr><th>City</th><th style="text-align:right;padding-right:16px;">Sessions</th><th style="text-align:right;">% of total</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Melbourne</td><td class="num-cell">111</td><td class="pct-cell">62%</td></tr>
+            <tr><td>Sydney</td><td class="num-cell">23</td><td class="pct-cell">13%</td></tr>
+            <tr><td style="color:var(--ink-soft);font-style:italic;">International</td><td class="num-cell">45</td><td class="pct-cell">25%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Top countries -->
+      <div>
+        <h3 style="font-family:'Fraunces',serif;font-size:15px;font-weight:500;margin-bottom:16px;color:var(--ink);">Top countries</h3>
+        <div class="bar-row"><div class="bar-head"><span class="src">Australia</span><span class="val">145 <small style="color:var(--ink-soft);font-size:11px;">100%</small></span></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">United States</span><span class="val">13 <small style="color:var(--ink-soft);font-size:11px;">9%</small></span></div><div class="track"><div class="fill alt" style="width:9%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Canada</span><span class="val">4 <small style="color:var(--ink-soft);font-size:11px;">3%</small></span></div><div class="track"><div class="fill dim" style="width:3%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Germany</span><span class="val">4 <small style="color:var(--ink-soft);font-size:11px;">3%</small></span></div><div class="track"><div class="fill dim" style="width:3%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Other</span><span class="val">11 <small style="color:var(--ink-soft);font-size:11px;">8%</small></span></div><div class="track"><div class="fill dim" style="width:8%"></div></div></div>
+      </div>
+    </div>
+    <div class="insight" style="margin-top:22px;">
+      <b>62% of traffic is from Melbourne</b> — your actual market. 25% is international (likely bots or irrelevant). Stronger local SEO targeting Templestowe/Melbourne could improve traffic quality.
+    </div>
+  </section>
+
+  <!-- SECTION 4: New vs returning visitors -->
+  <section style="background:var(--ivory);">
+    <div class="sec-label">New vs returning visitors</div>
+    <div class="stat-compare">
+      <div class="stat-card" style="background:var(--paper);">
+        <div class="stat-card-label">New visitors</div>
+        <div class="stat-row"><span class="stat-label">Sessions</span><span class="stat-value">114</span></div>
+        <div class="stat-row"><span class="stat-label">Engagement rate</span><span class="stat-value">59%</span></div>
+        <div class="stat-row"><span class="stat-label">Avg session duration</span><span class="stat-value">2:44</span></div>
+      </div>
+      <div class="stat-card" style="background:var(--paper);">
+        <div class="stat-card-label">Returning visitors</div>
+        <div class="stat-row"><span class="stat-label">Sessions</span><span class="stat-value">48</span></div>
+        <div class="stat-row"><span class="stat-label">Engagement rate</span><span class="stat-value">42%</span></div>
+        <div class="stat-row"><span class="stat-label">Avg session duration</span><span class="stat-value">8:54</span></div>
+      </div>
+    </div>
+    <div class="insight" style="margin-top:22px;">
+      <b>Returning visitors spend 3.3× longer on the site</b> — they're the ones comparing and booking. Give people a reason to come back: seasonal offers, new team introductions, or a simple blog.
+    </div>
+  </section>
+
+  <!-- SECTION 5: Facebook is bouncing (warning) -->
+  <section class="warning-block">
+    <div class="sec-label">⚠️ Facebook is bouncing</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th style="text-align:right;padding-right:16px;">Bounce rate</th>
+          <th style="text-align:right;padding-right:16px;">Avg time</th>
+          <th style="text-align:right;">Engagement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="font-weight:500;">Google organic</span></td>
+          <td class="num-cell">39%</td>
+          <td class="num-cell">3:14</td>
+          <td class="pct-cell">61%</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:500;">Direct</span></td>
+          <td class="num-cell">69%</td>
+          <td class="num-cell">6:46</td>
+          <td class="pct-cell">31%</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:500;">Instagram</span></td>
+          <td class="num-cell">25%</td>
+          <td class="num-cell">1:05</td>
+          <td class="pct-cell">75%</td>
+        </tr>
+        <tr>
+          <td><span style="font-weight:500;" class="danger">Facebook</span></td>
+          <td class="num-cell danger">100%</td>
+          <td class="num-cell danger">0 sec</td>
+          <td class="pct-cell danger">0%</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="insight" style="margin-top:22px;">
+      <b>Every single Facebook click bounces immediately.</b> The fbclid tracking URLs land correctly on the homepage, but users leave without engaging. Either the Facebook audience isn't a match, or the link preview doesn't set the right expectation.
+    </div>
+  </section>
+
+  <!-- SECTION 6: Device & browser breakdown -->
+  <section>
+    <div class="sec-label">Device &amp; browser breakdown</div>
+    <div class="cols">
+      <!-- Operating system -->
+      <div>
+        <h3 style="font-family:'Fraunces',serif;font-size:15px;font-weight:500;margin-bottom:16px;color:var(--ink);">Operating system</h3>
+        <div class="bar-row"><div class="bar-head"><span class="src">iOS</span><span class="val">85 <small style="color:var(--ink-soft);font-size:11px;">100%</small></span></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Windows</span><span class="val">30 <small style="color:var(--ink-soft);font-size:11px;">35%</small></span></div><div class="track"><div class="fill" style="width:35%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Mac</span><span class="val">28 <small style="color:var(--ink-soft);font-size:11px;">33%</small></span></div><div class="track"><div class="fill" style="width:33%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Android</span><span class="val">23 <small style="color:var(--ink-soft);font-size:11px;">27%</small></span></div><div class="track"><div class="fill alt" style="width:27%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Linux</span><span class="val">13 <small style="color:var(--ink-soft);font-size:11px;">15%</small></span></div><div class="track"><div class="fill dim" style="width:15%"></div></div></div>
+      </div>
+      <!-- Browser -->
+      <div>
+        <h3 style="font-family:'Fraunces',serif;font-size:15px;font-weight:500;margin-bottom:16px;color:var(--ink);">Browser</h3>
+        <div class="bar-row"><div class="bar-head"><span class="src">Chrome</span><span class="val">86 <small style="color:var(--ink-soft);font-size:11px;">100%</small></span></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Safari</span><span class="val">80 <small style="color:var(--ink-soft);font-size:11px;">93%</small></span></div><div class="track"><div class="fill" style="width:93%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Edge</span><span class="val">4 <small style="color:var(--ink-soft);font-size:11px;">5%</small></span></div><div class="track"><div class="fill dim" style="width:5%"></div></div></div>
+        <div class="bar-row"><div class="bar-head"><span class="src">Firefox</span><span class="val">4 <small style="color:var(--ink-soft);font-size:11px;">5%</small></span></div><div class="track"><div class="fill dim" style="width:5%"></div></div></div>
+      </div>
+    </div>
+    <div class="insight" style="margin-top:22px;">
+      <b>Nearly half of all traffic is iPhone/Safari.</b> Test the booking flow on Safari iOS specifically to ensure it's flawless.
+    </div>
+  </section>
+
+  <!-- SECTION 7: Recommendations -->
+  <section class="advice">
+    <div class="sec-label">Recommendations</div>
+    <div class="adv-item">
+      <div class="adv-num">1</div>
+      <div class="adv-body">
+        <h4>Add pages for /about, /contact, /book, /team</h4>
+        <p>People are typing these URLs and hitting 404s. Either create these pages or add redirects to the relevant sections of the homepage.</p>
+      </div>
+    </div>
+    <div class="adv-item">
+      <div class="adv-num">2</div>
+      <div class="adv-body">
+        <h4>Fix the Facebook link strategy</h4>
+        <p>100% bounce rate means every Facebook click is wasted effort. Check the link preview, test the landing experience from Facebook, and consider whether the audience targeting matches.</p>
+      </div>
+    </div>
+    <div class="adv-item">
+      <div class="adv-num">3</div>
+      <div class="adv-body">
+        <h4>Post at 6 pm to catch the evening peak</h4>
+        <p>Site traffic peaks between 7–9 pm. Posting content or promotions at 6 pm gives the algorithm time to surface it right when your audience is browsing.</p>
+      </div>
+    </div>
+    <div class="adv-item">
+      <div class="adv-num">4</div>
+      <div class="adv-body">
+        <h4>Run a Thursday promotion</h4>
+        <p>Thursday is the quietest day by far (9 sessions vs 44 on Tuesday). A mid-week special or targeted post on Wednesday evening could fill this gap.</p>
+      </div>
+    </div>
+    <div class="adv-item">
+      <div class="adv-num">5</div>
+      <div class="adv-body">
+        <h4>Double down on local SEO</h4>
+        <p>Add Templestowe/Melbourne-specific schema markup, keep Google Business Profile updated with photos and reviews, and consider location-specific landing page content.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>Deep dive from Google Analytics 4 for terencelondon.com, last 30 days to 4 June 2026. Companion to the monthly website brief.</div>
+  </footer>
+
+</div>
+</body>
+</html>
