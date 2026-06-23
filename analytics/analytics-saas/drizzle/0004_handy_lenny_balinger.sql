@@ -1,0 +1,1 @@
+ALTER TABLE "team_invitations" ADD COLUMN "role" varchar(50) DEFAULT 'viewer' NOT NULL;

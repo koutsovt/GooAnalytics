@@ -35,3 +35,6 @@ logs/
 # Misc
 *.pem
 ga4-key.json
+
+# Agent tooling / scratch
+.gg/

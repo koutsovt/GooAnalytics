@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: oklch(62% 0.19 264);
+  --color-brand-light: oklch(75% 0.15 264);
+  --color-brand-dark: oklch(45% 0.22 264);
+  --color-surface: oklch(98% 0.005 264);
+  --color-success: oklch(72% 0.19 155);
+  --color-warning: oklch(80% 0.18 85);
+  --color-danger: oklch(63% 0.24 29);
+  --color-chart-1: oklch(62% 0.19 264);
+  --color-chart-2: oklch(72% 0.19 155);
+  --color-chart-3: oklch(80% 0.18 85);
+  --color-chart-4: oklch(63% 0.24 29);
+  --color-chart-5: oklch(70% 0.15 330);
+  --color-background: oklch(98% 0.005 264);
+  --color-foreground: oklch(20% 0.05 264);
+  --color-card: oklch(100% 0 0);
+  --color-card-foreground: oklch(20% 0.05 264);
+  --color-primary: oklch(62% 0.19 264);
+  --color-primary-foreground: oklch(100% 0 0);
+  --color-secondary: oklch(75% 0.15 264);
+  --color-secondary-foreground: oklch(20% 0.05 264);
+  --color-muted: oklch(88% 0.02 264);
+  --color-muted-foreground: oklch(40% 0.08 264);
+  --color-accent: oklch(62% 0.19 264);
+  --color-accent-foreground: oklch(100% 0 0);
+  --color-destructive: oklch(63% 0.24 29);
+  --color-destructive-foreground: oklch(100% 0 0);
+  --color-border: oklch(88% 0.02 264);
+  --color-input: oklch(95% 0.01 264);
+  --color-ring: oklch(62% 0.19 264);
+  --border-radius: 0.5rem;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: oklch(15% 0.02 264);
+    --color-foreground: oklch(95% 0.02 264);
+    --color-card: oklch(20% 0.03 264);
+    --color-card-foreground: oklch(95% 0.02 264);
+    --color-muted: oklch(30% 0.04 264);
+    --color-muted-foreground: oklch(80% 0.08 264);
+    --color-input: oklch(25% 0.03 264);
+    --color-border: oklch(30% 0.04 264);
+  }
+}
+
+body {
+  background: rgb(var(--color-background) / 1);
+  color: rgb(var(--color-foreground) / 1);
+}
