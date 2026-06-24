@@ -44,7 +44,7 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8 text-color-muted-foreground">
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
         Loading your GA4 properties...
       </div>
@@ -84,16 +84,16 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
           onClick={() => onChange(property.propertyId)}
           className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
             value === property.propertyId
-              ? "border-color-brand bg-color-brand/5"
-              : "border-color-border bg-color-card hover:border-color-brand/50"
+              ? "border-brand bg-brand/5"
+              : "border-border bg-card hover:border-brand/50"
           }`}
         >
           <div className="flex items-start gap-3">
             <div
               className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                 value === property.propertyId
-                  ? "border-color-brand bg-color-brand"
-                  : "border-color-border"
+                  ? "border-brand bg-brand"
+                  : "border-border"
               }`}
             >
               {value === property.propertyId && (
@@ -111,8 +111,8 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
               )}
             </div>
             <div>
-              <p className="font-medium text-color-foreground">{property.displayName}</p>
-              <p className="text-xs text-color-muted-foreground font-mono mt-1">
+              <p className="font-medium text-foreground">{property.displayName}</p>
+              <p className="text-xs text-muted-foreground font-mono mt-1">
                 ID: {property.propertyId}
               </p>
             </div>

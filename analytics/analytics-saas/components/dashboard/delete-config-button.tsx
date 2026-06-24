@@ -39,9 +39,9 @@ export function DeleteConfigButton({ id, businessName }: DeleteConfigButtonProps
   if (showConfirm) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-color-card rounded-lg p-6 max-w-sm border border-color-border">
-          <h3 className="text-lg font-semibold text-color-foreground mb-2">Delete Property?</h3>
-          <p className="text-color-muted-foreground mb-6">
+        <div className="bg-card rounded-lg p-6 max-w-sm border border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-2">Delete Property?</h3>
+          <p className="text-muted-foreground mb-6">
             Are you sure you want to delete <strong>{businessName}</strong>? This cannot be undone.
           </p>
           <div className="flex gap-2">
@@ -54,7 +54,7 @@ export function DeleteConfigButton({ id, businessName }: DeleteConfigButtonProps
             </button>
             <button
               onClick={() => setShowConfirm(false)}
-              className="px-4 py-2 rounded-lg border border-color-border text-color-foreground hover:bg-color-muted"
+              className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted"
             >
               Cancel
             </button>

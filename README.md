@@ -51,7 +51,7 @@ pnpm mcp                    # Terminal 3 (optional): MCP server for Claude
 
 ```bash
 # Linting & formatting
-pnpm biome check --apply
+pnpm biome check --write
 
 # Testing
 pnpm test                   # Unit tests
@@ -116,11 +116,13 @@ pnpm drizzle-kit studio     # Open Drizzle Studio (GUI browser)
 - Admins can manage team membership
 - Viewers can only read reports
 
-✅ **Production-Ready**
+✅ **Operational Foundations**
 - Database migrations via Drizzle
-- Background job processing (BullMQ)
-- Comprehensive test coverage
-- Zero warnings, Biome-compliant code
+- Background job processing (BullMQ) with idempotent Stripe webhook handling
+- Unit tests (Vitest) for permissions, services, formatters, and session signing; route + E2E coverage is partial
+- TypeScript strict typecheck passes; Biome lint is clean for core `lib/` and API code (some UI accessibility lint items remain)
+- Structured logging via `lib/logger.ts` (no stray `console` calls in app code)
+- Per-workspace rate limiting on report generation/delivery
 - Audit logging for all team actions
 
 ## File Guide

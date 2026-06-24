@@ -49,6 +49,7 @@
 }
 
 body {
-  background: rgb(var(--color-background) / 1);
-  color: rgb(var(--color-foreground) / 1);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
 }

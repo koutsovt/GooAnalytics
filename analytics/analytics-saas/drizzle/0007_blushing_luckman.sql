@@ -1,0 +1,1 @@
+ALTER TABLE "report_configs" ADD COLUMN "place_id" varchar(255);

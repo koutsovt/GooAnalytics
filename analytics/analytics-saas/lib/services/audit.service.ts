@@ -1,6 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { teamAuditLogs } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 
 export type AuditAction =
   | "team_invite_sent"
@@ -32,7 +33,7 @@ export async function logTeamAudit(
       createdAt: new Date(),
     });
   } catch (error) {
-    console.error("Failed to log audit event:", error);
+    logger.error("Failed to log audit event:", error);
   }
 }
 
@@ -44,7 +45,7 @@ export async function getTeamAuditLogs(ownerId: string, limit: number = 50) {
       orderBy: desc(teamAuditLogs.createdAt),
     });
   } catch (error) {
-    console.error("Failed to fetch audit logs:", error);
+    logger.error("Failed to fetch audit logs:", error);
     return [];
   }
 }

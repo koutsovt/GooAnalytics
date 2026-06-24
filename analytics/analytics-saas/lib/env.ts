@@ -1,6 +1,6 @@
+import { createEnv } from "@t3-oss/env-nextjs";
 import { config as configDotenv } from "dotenv";
 import { join } from "path";
-import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
 configDotenv({ path: join(process.cwd(), ".env.local") });
@@ -19,10 +19,15 @@ export const env = createEnv({
     WHATSAPP_ACCESS_TOKEN: z.string(),
     ANTHROPIC_API_KEY: z.string(),
     Z_AI_API_KEY: z.string().default(""),
+    // Google Maps Places API (New) key. Self-service, key-based, no GBP approval
+    // needed. Powers public review/rating data via lib/clients/places.ts.
+    GOOGLE_MAPS_API_KEY: z.string().default(""),
     CRON_SECRET: z.string().min(32),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
+    // STRIPE_PRICE_ID is the Starter monthly price (kept for back-compat).
     STRIPE_PRICE_ID: z.string(),
+    STRIPE_PRICE_PRO: z.string().default(""),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -41,10 +46,12 @@ export const env = createEnv({
     WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     Z_AI_API_KEY: process.env.Z_AI_API_KEY || "",
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || "",
     CRON_SECRET: process.env.CRON_SECRET,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
+    STRIPE_PRICE_PRO: process.env.STRIPE_PRICE_PRO || "",
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface DeliverButtonProps {
   reportId: string;
@@ -31,12 +32,8 @@ export function DeliverButton({ reportId }: DeliverButtonProps) {
   };
 
   return (
-    <button
-      onClick={handleDeliver}
-      disabled={loading}
-      className="text-color-brand hover:underline font-medium disabled:opacity-50"
-    >
+    <Button variant="link" size="sm" onClick={handleDeliver} disabled={loading} className="h-auto p-0">
       {loading ? "Queuing..." : "Deliver"}
-    </button>
+    </Button>
   );
 }

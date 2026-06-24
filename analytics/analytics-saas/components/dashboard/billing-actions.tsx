@@ -1,43 +1,42 @@
 "use client";
 
 import { useState } from "react";
+import { Button, type ButtonProps } from "@/components/ui/button";
+
+type BillingMode = "active" | "checkout" | "upgrade";
 
 interface BillingActionsProps {
-  mode: "active" | "inactive";
+  mode: BillingMode;
+  plan?: "starter" | "pro";
+  label?: string;
+  variant?: ButtonProps["variant"];
 }
 
-export function BillingActions({ mode }: BillingActionsProps) {
+export function BillingActions({ mode, plan, label, variant }: BillingActionsProps) {
   const [loading, setLoading] = useState(false);
 
-  const handleStartTrial = async () => {
+  const post = async (path: string, body?: unknown) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/billing/checkout", { method: "POST" });
+      const response = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      });
       if (!response.ok) {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
+        const error = await response.json().catch(() => ({}));
+        alert(`Error: ${error.error ?? "Something went wrong"}`);
         return;
       }
-      const { url } = await response.json();
-      window.location.href = url;
-    } catch (error) {
-      alert(`Failed: ${error}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleManageBilling = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("/api/billing/portal", { method: "POST" });
-      if (!response.ok) {
-        const error = await response.json();
-        alert(`Error: ${error.error}`);
-        return;
+      const data = await response.json().catch(() => ({}));
+      // A plan change applied server-side returns { updated: true } with no URL;
+      // just refresh so the billing card shows the new tier. New checkouts and
+      // the portal return a Stripe { url } to redirect to.
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        window.location.reload();
       }
-      const { url } = await response.json();
-      window.location.href = url;
     } catch (error) {
       alert(`Failed: ${error}`);
     } finally {
@@ -47,23 +46,20 @@ export function BillingActions({ mode }: BillingActionsProps) {
 
   if (mode === "active") {
     return (
-      <button
-        onClick={handleManageBilling}
-        disabled={loading}
-        className="mt-6 px-4 py-2 rounded-lg bg-color-brand text-white font-medium hover:bg-color-brand-dark transition-colors w-full disabled:opacity-50"
-      >
-        {loading ? "Loading..." : "Manage Billing"}
-      </button>
+      <Button onClick={() => post("/api/billing/portal")} disabled={loading} variant={variant}>
+        {loading ? "Loading..." : label ?? "Manage billing"}
+      </Button>
     );
   }
 
+  // checkout + upgrade both start a Stripe Checkout session for the chosen plan.
   return (
-    <button
-      onClick={handleStartTrial}
+    <Button
+      onClick={() => post("/api/billing/checkout", { plan })}
       disabled={loading}
-      className="px-4 py-2 rounded-lg bg-color-brand text-white font-medium hover:bg-color-brand-dark transition-colors disabled:opacity-50"
+      variant={variant}
     >
-      {loading ? "Loading..." : "Start Free Trial"}
-    </button>
+      {loading ? "Loading..." : label ?? "Start plan"}
+    </Button>
   );
 }

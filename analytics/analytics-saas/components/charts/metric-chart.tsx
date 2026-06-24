@@ -33,11 +33,11 @@ const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg bg-color-card border border-color-border shadow-lg p-3">
-        <p className="text-xs font-semibold text-color-muted-foreground uppercase">
+      <div className="rounded-lg bg-card border border-border shadow-lg p-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase">
           {label}
         </p>
-        <p className="text-lg font-bold text-color-brand mt-1">
+        <p className="text-lg font-bold text-brand mt-1">
           {typeof payload[0].value === "number"
             ? payload[0].value >= 1000
               ? `${(payload[0].value / 1000).toFixed(1)}k`
@@ -72,25 +72,25 @@ export function MetricChart({
   const max = values.length > 0 ? Math.max(...(values as number[])) : 0;
 
   return (
-    <div className="rounded-lg border border-color-border bg-color-card p-6 hover:border-color-brand/30 transition-colors">
+    <div className="rounded-lg border border-border bg-card p-6 hover:border-brand/30 transition-colors">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-color-foreground">{title}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         {description && (
-          <p className="text-xs text-color-muted-foreground mt-1">{description}</p>
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}
         <div className="flex gap-6 mt-3">
           {average > 0 && (
             <div>
-              <p className="text-xs text-color-muted-foreground">Average</p>
-              <p className="text-sm font-semibold text-color-foreground">
+              <p className="text-xs text-muted-foreground">Average</p>
+              <p className="text-sm font-semibold text-foreground">
                 {average >= 1000 ? `${(average / 1000).toFixed(1)}k` : average.toLocaleString()}
               </p>
             </div>
           )}
           {max > 0 && (
             <div>
-              <p className="text-xs text-color-muted-foreground">Peak</p>
-              <p className="text-sm font-semibold text-color-foreground">
+              <p className="text-xs text-muted-foreground">Peak</p>
+              <p className="text-sm font-semibold text-foreground">
                 {max >= 1000 ? `${(max / 1000).toFixed(1)}k` : max.toLocaleString()}
               </p>
             </div>
@@ -123,15 +123,7 @@ export function MetricChart({
             cursor={{ stroke: "var(--color-border)" }}
             wrapperStyle={{ outline: "none" }}
           />
-          <Legend
-            wrapperStyle={{ paddingTop: "20px" }}
-            contentStyle={{
-              color: "var(--color-foreground)",
-              fontSize: "12px",
-              border: "none",
-            }}
-            iconType="line"
-          />
+          <Legend wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }} iconType="line" />
           {average > 0 && (
             <ReferenceLine
               y={average}

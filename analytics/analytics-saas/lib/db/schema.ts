@@ -55,6 +55,10 @@ export const reportConfigs = pgTable(
     ga4PropertyId: varchar("ga4_property_id", { length: 255 }),
     gscSiteUrl: varchar("gsc_site_url", { length: 255 }),
     gbpLocationId: varchar("gbp_location_id", { length: 255 }),
+    // Google Maps Place ID (ChIJ…) resolved once from the website at config
+    // creation, then used for deterministic Places review lookups. Null until
+    // resolved (or if no public listing matches the site).
+    placeId: varchar("place_id", { length: 255 }),
     businessName: varchar("business_name", { length: 255 }).notNull(),
     businessType: varchar("business_type", { length: 255 }),
     activeChannels: json("active_channels").default(["email"]),
@@ -110,6 +114,9 @@ export const subscriptions = pgTable(
     stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).notNull(),
     stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
     active: boolean("active").notNull().default(false),
+    // Tier slug from lib/plans.ts ("free" | "starter" | "pro"). Drives the
+    // site-creation limit. Reset to "free" when the subscription ends.
+    plan: varchar("plan", { length: 20 }).notNull().default("free"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

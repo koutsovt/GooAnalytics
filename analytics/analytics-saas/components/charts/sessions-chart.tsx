@@ -30,11 +30,11 @@ const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg bg-color-card border border-color-border shadow-lg p-3">
-        <p className="text-xs font-semibold text-color-muted-foreground uppercase">
+      <div className="rounded-lg bg-card border border-border shadow-lg p-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase">
           {payload[0].name}
         </p>
-        <p className="text-lg font-bold text-color-brand mt-1">
+        <p className="text-lg font-bold text-brand mt-1">
           {payload[0].value?.toLocaleString() ?? 0}
         </p>
       </div>
@@ -61,15 +61,15 @@ export function SessionsChart({
       : 0;
 
   return (
-    <div className="rounded-lg border border-color-border bg-color-card p-4 md:p-6 hover:border-color-brand/30 transition-colors">
+    <div className="rounded-lg border border-border bg-card p-4 md:p-6 hover:border-brand/30 transition-colors">
       <div className="mb-4 md:mb-6">
-        <h3 className="text-base md:text-lg font-semibold text-color-foreground">{title}</h3>
+        <h3 className="text-base md:text-lg font-semibold text-foreground">{title}</h3>
         {description && (
-          <p className="text-xs text-color-muted-foreground mt-1">{description}</p>
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}
         {avgSessions > 0 && (
-          <p className="text-xs text-color-muted-foreground mt-2">
-            Average: <span className="font-semibold text-color-foreground">{avgSessions.toLocaleString()} sessions</span>
+          <p className="text-xs text-muted-foreground mt-2">
+            Average: <span className="font-semibold text-foreground">{avgSessions.toLocaleString()} sessions</span>
           </p>
         )}
       </div>
@@ -95,15 +95,7 @@ export function SessionsChart({
             tickFormatter={(value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value)}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: "var(--color-border)" }} />
-          <Legend
-            wrapperStyle={{ paddingTop: "20px" }}
-            contentStyle={{
-              color: "var(--color-foreground)",
-              fontSize: "12px",
-              border: "none",
-            }}
-            iconType="line"
-          />
+          <Legend wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }} iconType="line" />
           {avgSessions > 0 && (
             <ReferenceLine
               y={avgSessions}

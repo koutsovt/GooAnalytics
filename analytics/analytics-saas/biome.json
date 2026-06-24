@@ -29,6 +29,16 @@
     }
   },
   "files": {
-    "includes": ["**", "!**/.next", "!**/drizzle", "!**/node_modules", "!**/*.gen.ts"]
+    "includes": [
+      "**",
+      "!**/.next",
+      "!**/drizzle",
+      "!**/node_modules",
+      "!**/*.gen.ts",
+      "!**/*.tsbuildinfo",
+      "!**/coverage",
+      "!**/test-results",
+      "!**/playwright-report"
+    ]
   }
 }

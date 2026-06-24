@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
 import { requireSession } from "@/lib/auth/session";
-import { logTeamAudit } from "@/lib/services/audit.service";
 import { db } from "@/lib/db";
 import { teamInvitations } from "@/lib/db/schema";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
+import { logTeamAudit } from "@/lib/services/audit.service";
 
 async function sendInvitationEmail(email: string, acceptUrl: string) {
   try {
@@ -26,11 +27,11 @@ async function sendInvitationEmail(email: string, acceptUrl: string) {
     });
 
     if (!response.ok) {
-      console.error("Failed to send email:", await response.text());
+      logger.error("Failed to send email:", await response.text());
       throw new Error("Failed to send invitation email");
     }
   } catch (error) {
-    console.error("Email send error:", error);
+    logger.error("Email send error:", error);
     throw error;
   }
 }
@@ -70,7 +71,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ invId: 
     return Response.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to resend invitation:", message);
+    logger.error("Failed to resend invitation:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

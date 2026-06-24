@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { setSessionCookie } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   // Only allow in development
@@ -39,7 +40,7 @@ export async function GET(req: Request) {
     if ((error as any)?.digest?.startsWith("NEXT_REDIRECT")) {
       throw error;
     }
-    console.error("Dev login error:", error);
+    logger.error("Dev login error:", error);
     return Response.json(
       { error: "Dev login failed: " + (error instanceof Error ? error.message : "Unknown error") },
       { status: 500 },

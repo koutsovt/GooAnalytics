@@ -4,12 +4,13 @@ import { google } from "googleapis";
 import { db } from "@/lib/db";
 import { googleTokens } from "@/lib/db/schema";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 const ALGORITHM = "aes-256-gcm";
 const KEY = Buffer.from(env.TOKEN_ENCRYPTION_KEY, "hex");
 
 if (KEY.length !== 32) {
-  console.warn(
+  logger.warn(
     "TOKEN_ENCRYPTION_KEY must be 64 hex characters (32 bytes). Generating new key for development only.",
   );
 }
@@ -52,6 +53,8 @@ export function createOAuth2Client() {
   );
 }
 
+export const OAUTH_STATE_COOKIE = "oauth_state";
+
 export const GOOGLE_SCOPES = [
   "openid",
   "https://www.googleapis.com/auth/userinfo.profile",
@@ -61,12 +64,13 @@ export const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/business.manage",
 ];
 
-export function getAuthUrl(): string {
+export function getAuthUrl(state: string): string {
   const oauth2Client = createOAuth2Client();
   return oauth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
     scope: GOOGLE_SCOPES,
+    state,
   });
 }
 

@@ -1,31 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { verifyToken } from "@/lib/auth/session-token";
 
 const SESSION_COOKIE_NAME = "session";
-
-async function verifyCookie(signedValue: string, authSecret: string): Promise<string | null> {
-  const [value, signature] = signedValue.split(".");
-  if (!value || !signature) return null;
-
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(authSecret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-
-  const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value));
-  const expected = Array.from(new Uint8Array(signed))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
-  try {
-    return signature === expected ? value : null;
-  } catch {
-    return null;
-  }
-}
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -53,7 +30,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const signedCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  if (!signedCookie || !(await verifyCookie(signedCookie, authSecret))) {
+  if (!signedCookie || !(await verifyToken(signedCookie, authSecret))) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

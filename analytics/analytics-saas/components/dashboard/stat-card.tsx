@@ -20,24 +20,33 @@ export function StatCard({
   sparkData,
 }: StatCardProps) {
   const isDeltaPositive = delta !== undefined && delta >= 0;
-  const hasSparkline = sparkData && sparkData.length > 0;
+  // A single point can't show a trend, so only draw the sparkline with ≥2 points.
+  const hasSparkline = sparkData && sparkData.length >= 2;
+  // Red/green only mean something when there's a real delta; otherwise stay
+  // neutral so a metric without a comparison doesn't falsely imply a decline.
+  const sparkColor =
+    delta === undefined
+      ? "var(--color-brand)"
+      : isDeltaPositive
+        ? "var(--color-success)"
+        : "var(--color-danger)";
 
   return (
-    <div className="rounded-lg border border-color-border bg-color-card p-4 md:p-6 hover:border-color-brand/30 transition-colors">
+    <div className="rounded-lg border border-border bg-card p-4 md:p-6 hover:border-brand/30 transition-colors">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <p className="text-xs font-medium text-color-muted-foreground uppercase tracking-wide">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             {label}
           </p>
-          <p className="text-3xl font-bold text-color-foreground mt-2">{value}</p>
+          <p className="text-3xl font-bold text-foreground mt-2">{value}</p>
 
           <div className="mt-3 flex items-baseline gap-2">
             {delta !== undefined && (
               <span
                 className={`inline-flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded ${
                   isDeltaPositive
-                    ? "bg-color-success/10 text-color-success"
-                    : "bg-color-danger/10 text-color-danger"
+                    ? "bg-success/10 text-success"
+                    : "bg-danger/10 text-danger"
                 }`}
               >
                 <span>{isDeltaPositive ? "↑" : "↓"}</span>
@@ -45,14 +54,14 @@ export function StatCard({
               </span>
             )}
             {comparison && (
-              <span className="text-xs text-color-muted-foreground">
+              <span className="text-xs text-muted-foreground">
                 {comparison}
               </span>
             )}
           </div>
 
           {unit && (
-            <p className="text-xs text-color-muted-foreground mt-2">{unit}</p>
+            <p className="text-xs text-muted-foreground mt-2">{unit}</p>
           )}
         </div>
 
@@ -63,7 +72,7 @@ export function StatCard({
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke={isDeltaPositive ? "var(--color-success)" : "var(--color-danger)"}
+                  stroke={sparkColor}
                   strokeWidth={2}
                   dot={false}
                   isAnimationActive={false}

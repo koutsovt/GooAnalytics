@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { setSessionCookie } from "@/lib/auth/session";
-import { logTeamAudit } from "@/lib/services/audit.service";
 import { db } from "@/lib/db";
 import { teamInvitations, teamMembers, users } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
+import { logTeamAudit } from "@/lib/services/audit.service";
 
 export async function GET(request: Request) {
   const token = new URL(request.url).searchParams.get("token");
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
     return redirect("/dashboard");
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to accept invitation:", message);
+    logger.error("Failed to accept invitation:", message);
     return redirect(`/login?error=${encodeURIComponent(message)}`);
   }
 }

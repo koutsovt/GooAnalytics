@@ -2,6 +2,7 @@ import { and, eq, isNull, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { teamInvitations } from "@/lib/db/schema";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   try {
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to cleanup invitations:", message);
+    logger.error("Failed to cleanup invitations:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

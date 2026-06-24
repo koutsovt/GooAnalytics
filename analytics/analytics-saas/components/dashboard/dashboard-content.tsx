@@ -1,223 +1,99 @@
-"use client";
-
-import { useState } from "react";
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { SessionsChart } from "@/components/charts/sessions-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { ComparisonStatCard } from "@/components/dashboard/comparison-stat-card";
-import { ComparisonToggle } from "@/components/dashboard/comparison-toggle";
-import { ExportButton } from "@/components/dashboard/export-button";
-import { InsightsPanel } from "@/components/dashboard/insights-panel";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { type DateRange } from "@/components/dashboard/date-range-selector";
-import { type FilterConfig } from "@/components/dashboard/filter-panel";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
-interface DashboardContentProps {
-  initialData: {
-    sessions: number;
-    sessionsDelta: number;
-    impressions: number;
-    interactions: number;
-    rating: number;
-    chartData: Array<{ period: string; sessions: number }>;
-    sparklineData: Array<{ value: number }>;
-    impressionData: Array<{ value: number }>;
-    interactionData: Array<{ value: number }>;
-    ratingData: Array<{ value: number }>;
-    period: string;
-    hasReports: boolean;
-  };
-  filters: FilterConfig[];
+interface DashboardData {
+  hasReports: boolean;
+  period: string;
+  latestReportId: string | null;
+  gbpConnected: boolean;
+  sessions: number;
+  sessionsDelta: number;
+  impressions: number;
+  clicks: number;
+  rating: number;
+  totalReviews: number;
+  chartData: Array<{ period: string; sessions: number }>;
+  sessionsSpark: Array<{ value: number }>;
+  impressionsSpark: Array<{ value: number }>;
+  clicksSpark: Array<{ value: number }>;
+  ratingSpark: Array<{ value: number }>;
 }
 
-export function DashboardContent({
-  initialData,
-  filters,
-}: DashboardContentProps) {
-  const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
-  const [dateRange, setDateRange] = useState<DateRange | null>(null);
-  const [comparisonMode, setComparisonMode] = useState(false);
-
-  const handleFilterChange = (selected: Record<string, string[]>) => {
-    setActiveFilters(selected);
-    // TODO: In future, fetch filtered data from backend
-    console.log("Active filters:", selected);
-  };
-
-  const handleDateRangeChange = (range: DateRange) => {
-    setDateRange(range);
-    // TODO: In future, fetch data for date range from backend
-    console.log("Date range:", range);
-  };
-
-  // Filter logic: apply filters to metrics
-  const isFiltered = Object.values(activeFilters).some((arr) => arr.length > 0);
-
-  // For now, show all data (in future, filter based on activeFilters)
-  const displayData = {
-    sessions: initialData.sessions,
-    sessionsDelta: initialData.sessionsDelta,
-    impressions: initialData.impressions,
-    interactions: initialData.interactions,
-    rating: initialData.rating,
-    chartData: initialData.chartData,
-    sparklineData: initialData.sparklineData,
-    impressionData: initialData.impressionData,
-    interactionData: initialData.interactionData,
-    ratingData: initialData.ratingData,
-  };
-
-  // Show filter indicator if active
-  const filterIndicator =
-    isFiltered &&
-    Object.entries(activeFilters).map(([category, selected]) => ({
-      category,
-      count: selected.length,
-    }));
+export function DashboardContent({ data }: { data: DashboardData }) {
+  if (!data.hasReports) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Overview</h1>
+        <p className="text-muted-foreground mb-8">Your latest brief at a glance.</p>
+        <Card className="p-10 text-center">
+          <p className="text-foreground font-medium">No reports yet</p>
+          <p className="text-muted-foreground text-sm mt-1 mb-6">
+            Add your website and generate your first monthly brief to see your numbers here.
+          </p>
+          <Button asChild>
+            <Link href="/reports">Generate a report</Link>
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <DashboardHeader
-        title="Dashboard"
-        subtitle={
-          <>
-            <span>Latest report: {initialData.period}</span>
-            {filterIndicator && filterIndicator.length > 0 && (
-              <span className="ml-4 text-color-brand font-semibold">
-                Filtered by:{" "}
-                {filterIndicator.map((f) => `${f.category} (${f.count})`).join(", ")}
-              </span>
-            )}
-          </>
-        }
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onDateRangeChange={handleDateRangeChange}
-      />
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Overview</h1>
+          <p className="text-muted-foreground mt-1">Latest brief · {data.period}</p>
+        </div>
+        {data.latestReportId && (
+          <Button asChild variant="outline">
+            <Link href={`/reports/${data.latestReportId}`}>
+              View full brief
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        )}
+      </div>
 
-      {/* Toolbar */}
-      <div className="mb-6 flex flex-wrap gap-2 justify-end">
-        <ExportButton
-          data={{
-            metrics: [
-              { label: "Sessions", value: displayData.sessions, unit: "visits", delta: displayData.sessionsDelta },
-              { label: "Search Impressions", value: displayData.impressions, unit: "impressions" },
-              { label: "Local Interactions", value: displayData.interactions, unit: "interactions" },
-              { label: "Avg Rating", value: displayData.rating, unit: "stars" },
-            ],
-            period: initialData.period,
-            timestamp: new Date(),
-          }}
-          fileName="analytics-dashboard"
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          label="Visitors"
+          value={data.sessions.toLocaleString()}
+          delta={data.sessionsDelta || undefined}
+          comparison={data.sessionsDelta ? "vs last period" : undefined}
+          unit="website sessions"
+          sparkData={data.sessionsSpark}
         />
-        <ComparisonToggle
-          enabled={comparisonMode}
-          onChange={setComparisonMode}
+        <StatCard
+          label="Search impressions"
+          value={data.impressions.toLocaleString()}
+          unit="shown in Google"
+          sparkData={data.impressionsSpark}
+        />
+        <StatCard
+          label="Search clicks"
+          value={data.clicks.toLocaleString()}
+          unit="visits from search"
+          sparkData={data.clicksSpark}
+        />
+        <StatCard
+          label="Avg rating"
+          value={data.gbpConnected ? data.rating.toFixed(1) : "—"}
+          unit={data.gbpConnected ? `${data.totalReviews.toLocaleString()} reviews` : "not connected"}
+          sparkData={data.gbpConnected ? data.ratingSpark : undefined}
         />
       </div>
 
-      {comparisonMode ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-8">
-          <ComparisonStatCard
-            label="Sessions"
-            currentValue={displayData.sessions}
-            previousValue={Math.max(100, displayData.sessions - displayData.sessionsDelta * 10)}
-            unit="website visits"
-            currentPeriod="This Period"
-            previousPeriod="Previous Period"
-          />
-          <ComparisonStatCard
-            label="Search Impressions"
-            currentValue={displayData.impressions}
-            previousValue={Math.max(50, displayData.impressions - 500)}
-            unit="google search"
-            currentPeriod="This Period"
-            previousPeriod="Previous Period"
-          />
-          <ComparisonStatCard
-            label="Local Interactions"
-            currentValue={displayData.interactions}
-            previousValue={Math.max(50, displayData.interactions - 200)}
-            unit="google business"
-            currentPeriod="This Period"
-            previousPeriod="Previous Period"
-          />
-          <ComparisonStatCard
-            label="Avg Rating"
-            currentValue={displayData.rating * 10}
-            previousValue={displayData.rating * 10 - 2}
-            unit="points"
-            currentPeriod="This Period"
-            previousPeriod="Previous Period"
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
-          <StatCard
-            label="Sessions"
-            value={displayData.sessions.toLocaleString()}
-            delta={displayData.sessionsDelta}
-            comparison="vs last period"
-            unit="website visits"
-            sparkData={displayData.sparklineData}
-          />
-          <StatCard
-            label="Search Impressions"
-            value={displayData.impressions.toLocaleString()}
-            unit="google search"
-            sparkData={displayData.impressionData}
-          />
-          <StatCard
-            label="Local Interactions"
-            value={displayData.interactions.toLocaleString()}
-            unit="google business"
-            sparkData={displayData.interactionData}
-          />
-          <StatCard
-            label="Avg Rating"
-            value={displayData.rating.toFixed(2)}
-            unit="out of 5"
-            sparkData={displayData.ratingData}
-          />
-        </div>
-      )}
-
-      {displayData.chartData.length > 0 && (
-        <div className="mb-8">
-          <SessionsChart
-            data={displayData.chartData}
-            title={isFiltered ? "Filtered Sessions Over Time" : "Sessions Over Time"}
-            description={
-              isFiltered
-                ? `Showing data for: ${Object.entries(activeFilters)
-                    .filter(([, v]) => v.length > 0)
-                    .map(([k, v]) => `${k}: ${v.join(", ")}`)
-                    .join(" | ")}`
-                : undefined
-            }
-          />
-        </div>
-      )}
-
-      {/* Insights Panel */}
-      <div className="mb-8">
-        <InsightsPanel
-          metrics={{
-            sessions: displayData.sessions,
-            sessionsDelta: displayData.sessionsDelta,
-            impressions: displayData.impressions,
-            interactions: displayData.interactions,
-            rating: displayData.rating,
-          }}
-          period={initialData.period}
+      {data.chartData.length > 1 && (
+        <SessionsChart
+          data={data.chartData}
+          title="Visitors over time"
+          description="Website sessions across your recent reports"
         />
-      </div>
-
-      {!initialData.hasReports && (
-        <div className="rounded-lg border border-color-border bg-color-muted/30 p-6 text-center">
-          <p className="text-base text-color-foreground font-medium">
-            No reports yet. Connect your Google Analytics to get started.
-          </p>
-        </div>
       )}
     </div>
   );

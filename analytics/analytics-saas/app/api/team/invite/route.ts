@@ -1,11 +1,12 @@
 import crypto from "crypto";
 import { eq } from "drizzle-orm";
-import { requireSession } from "@/lib/auth/session";
 import { canManageTeam } from "@/lib/auth/permissions";
-import { logTeamAudit } from "@/lib/services/audit.service";
+import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { teamInvitations, teamMembers } from "@/lib/db/schema";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
+import { logTeamAudit } from "@/lib/services/audit.service";
 
 async function sendInvitationEmail(email: string, acceptUrl: string) {
   try {
@@ -28,11 +29,11 @@ async function sendInvitationEmail(email: string, acceptUrl: string) {
     });
 
     if (!response.ok) {
-      console.error("Failed to send email:", await response.text());
+      logger.error("Failed to send email:", await response.text());
       throw new Error("Failed to send invitation email");
     }
   } catch (error) {
-    console.error("Email send error:", error);
+    logger.error("Email send error:", error);
     throw error;
   }
 }
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
     return Response.json({ success: true, invitationId: id }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to send invitation:", message);
+    logger.error("Failed to send invitation:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

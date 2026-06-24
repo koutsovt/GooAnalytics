@@ -20,8 +20,8 @@ export function NavLink({ href, label, icon: Icon }: NavLinkProps) {
       href={href}
       className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
         isActive
-          ? "bg-color-brand text-white shadow-sm"
-          : "text-color-foreground hover:bg-color-muted hover:text-color-brand"
+          ? "bg-brand text-white shadow-sm"
+          : "text-foreground hover:bg-muted hover:text-brand"
       }`}
     >
       <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />

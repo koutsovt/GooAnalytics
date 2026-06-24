@@ -96,18 +96,18 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="mb-8">
-      <div className="rounded-lg border border-color-border bg-color-card p-6">
-        <h2 className="text-lg font-semibold text-color-foreground mb-4">Generate New Report</h2>
+      <div className="rounded-lg border border-border bg-card p-6">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Generate New Report</h2>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-color-muted-foreground mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Property
             </label>
             <select
               value={selectedConfigId}
               onChange={(e) => setSelectedConfigId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-color-border bg-color-input text-color-foreground"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
             >
               {configs.map((config) => (
                 <option key={config.id} value={config.id}>
@@ -119,26 +119,26 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-color-muted-foreground mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Start Date
               </label>
               <input
                 type="date"
                 value={periodStart}
                 onChange={(e) => setPeriodStart(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-color-border bg-color-input text-color-foreground"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-color-muted-foreground mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 End Date
               </label>
               <input
                 type="date"
                 value={periodEnd}
                 onChange={(e) => setPeriodEnd(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-color-border bg-color-input text-color-foreground"
+                className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
               />
             </div>
 
@@ -155,14 +155,14 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
         </div>
 
         {status.kind === "queued" && (
-          <div className="mt-4 p-3 bg-color-warning/10 border border-color-warning/30 rounded text-sm text-color-warning">
+          <div className="mt-4 p-3 bg-warning/10 border border-warning/30 rounded text-sm text-warning">
             Report queued (Job <code className="font-mono">{status.jobId}</code>). Generating… this
             can take a minute — the list below updates automatically when it&apos;s ready.
           </div>
         )}
 
         {status.kind === "error" && (
-          <div className="mt-4 p-3 bg-color-danger/10 border border-color-danger/30 rounded text-sm text-color-danger">
+          <div className="mt-4 p-3 bg-danger/10 border border-danger/30 rounded text-sm text-danger">
             {status.message}
           </div>
         )}

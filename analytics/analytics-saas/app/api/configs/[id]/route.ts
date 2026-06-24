@@ -1,8 +1,10 @@
 import { eq } from "drizzle-orm";
-import { requireSession } from "@/lib/auth/session";
 import { canDeleteConfig, canEditConfig } from "@/lib/auth/permissions";
+import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { reportConfigs } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
+import { updateConfigSchema } from "@/lib/validation";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,24 +24,27 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return Response.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const body = (await req.json()) as {
-      businessName?: string;
-      ga4PropertyId?: string;
-      gscSiteUrl?: string;
-      gbpLocationId?: string;
-      recipientEmail?: string;
-      recipientPhone?: string;
-      scheduleFrequency?: string;
-      scheduleDayOfMonth?: number;
-      scheduleDayOfWeek?: number;
-      scheduleTime?: string;
-      scheduleTimezone?: string;
-    };
+    const parsed = updateConfigSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return Response.json(
+        { error: "Invalid input", issues: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    const body = parsed.data;
 
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (body.businessName !== undefined) updates.businessName = body.businessName;
     if (body.ga4PropertyId !== undefined) updates.ga4PropertyId = body.ga4PropertyId;
-    if (body.gscSiteUrl !== undefined) updates.gscSiteUrl = body.gscSiteUrl;
+    if (body.gscSiteUrl !== undefined) {
+      updates.gscSiteUrl = body.gscSiteUrl;
+      // The website changed, so a previously resolved Place ID may now point at
+      // the wrong business. Clear it; report-time text search re-resolves the
+      // correct listing (host-guarded) on the next run.
+      if (body.gscSiteUrl !== config.gscSiteUrl) {
+        updates.placeId = null;
+      }
+    }
     if (body.gbpLocationId !== undefined) updates.gbpLocationId = body.gbpLocationId;
     if (body.recipientEmail !== undefined) updates.recipientEmail = body.recipientEmail;
     if (body.recipientPhone !== undefined) updates.recipientPhone = body.recipientPhone;
@@ -54,7 +59,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return Response.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to update config:", message);
+    logger.error("Failed to update config:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }
@@ -82,7 +87,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     return Response.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to delete config:", message);
+    logger.error("Failed to delete config:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

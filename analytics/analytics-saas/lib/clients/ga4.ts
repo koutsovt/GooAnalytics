@@ -28,40 +28,70 @@ export async function fetchGA4Data(
   const curr = { startDate: periodStart, endDate: periodEnd };
   const prior = { startDate: priorStartStr, endDate: priorEndStr };
 
-  const [sessionsRes, priorSessionsRes, topPagesRes, trafficSourceRes, engagementRes] =
-    await Promise.all([
-      client.runReport({
-        property: prop,
-        dateRanges: [curr],
-        metrics: [{ name: "sessions" }],
-      }),
-      client.runReport({
-        property: prop,
-        dateRanges: [prior],
-        metrics: [{ name: "sessions" }],
-      }),
-      client.runReport({
-        property: prop,
-        dateRanges: [curr],
-        dimensions: [{ name: "pagePath" }],
-        metrics: [{ name: "screenPageViews" }],
-        orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
-        limit: 5,
-      }),
-      client.runReport({
-        property: prop,
-        dateRanges: [curr],
-        dimensions: [{ name: "sessionDefaultChannelGroup" }],
-        metrics: [{ name: "sessions" }],
-        orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-        limit: 6,
-      }),
-      client.runReport({
-        property: prop,
-        dateRanges: [curr],
-        metrics: [{ name: "engagementRate" }],
-      }),
-    ]);
+  const [
+    sessionsRes,
+    priorSessionsRes,
+    topPagesRes,
+    trafficSourceRes,
+    engagementRes,
+    dailyRes,
+    deviceRes,
+    durationRes,
+  ] = await Promise.all([
+    client.runReport({
+      property: prop,
+      dateRanges: [curr],
+      metrics: [{ name: "sessions" }],
+    }),
+    client.runReport({
+      property: prop,
+      dateRanges: [prior],
+      metrics: [{ name: "sessions" }],
+    }),
+    client.runReport({
+      property: prop,
+      dateRanges: [curr],
+      dimensions: [{ name: "pagePath" }],
+      metrics: [{ name: "screenPageViews" }],
+      orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+      limit: 5,
+    }),
+    client.runReport({
+      property: prop,
+      dateRanges: [curr],
+      dimensions: [{ name: "sessionDefaultChannelGroup" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: 6,
+    }),
+    client.runReport({
+      property: prop,
+      dateRanges: [curr],
+      metrics: [{ name: "engagementRate" }],
+    }),
+    // Daily sessions for the trend line, oldest day first.
+    client.runReport({
+      property: prop,
+      dateRanges: [curr],
+      dimensions: [{ name: "date" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ dimension: { dimensionName: "date" } }],
+    }),
+    // Sessions by device category for the mobile/desktop split.
+    client.runReport({
+      property: prop,
+      dateRanges: [curr],
+      dimensions: [{ name: "deviceCategory" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+    }),
+    // Average session duration (seconds) for "time on site".
+    client.runReport({
+      property: prop,
+      dateRanges: [curr],
+      metrics: [{ name: "averageSessionDuration" }],
+    }),
+  ]);
 
   // Business Profile interactions in GA4 only exist when the property is linked to a
   // Google Business Profile. On unlinked properties these metrics return INVALID_ARGUMENT,
@@ -102,6 +132,18 @@ export async function fetchGA4Data(
 
   const engagementRate = parseFloat(engagementRes[0]?.rows?.[0]?.metricValues?.[0]?.value ?? "0");
 
+  const avgSessionDuration = parseFloat(durationRes[0]?.rows?.[0]?.metricValues?.[0]?.value ?? "0");
+
+  const dailySessions = (dailyRes[0]?.rows ?? []).map((r) => ({
+    date: r.dimensionValues?.[0]?.value ?? "",
+    sessions: parseInt(r.metricValues?.[0]?.value ?? "0"),
+  }));
+
+  const devices = (deviceRes[0]?.rows ?? []).map((r) => ({
+    device: r.dimensionValues?.[0]?.value ?? "unknown",
+    sessions: parseInt(r.metricValues?.[0]?.value ?? "0"),
+  }));
+
   const gbpMap: Record<string, number> = {};
   for (const row of gbpRows) {
     gbpMap[row.dimensionValues?.[0]?.value ?? ""] = parseInt(row.metricValues?.[0]?.value ?? "0");
@@ -121,7 +163,16 @@ export async function fetchGA4Data(
     priorTotal > 0 ? Math.round(((totalInteractions - priorTotal) / priorTotal) * 1000) / 10 : 0;
 
   return {
-    website: { sessions, sessionsDelta, topPages, trafficSources, engagementRate },
+    website: {
+      sessions,
+      sessionsDelta,
+      topPages,
+      trafficSources,
+      engagementRate,
+      avgSessionDuration,
+      dailySessions,
+      devices,
+    },
     local: { calls, directions, websiteClicks, bookings, totalInteractions, interactionsDelta },
   };
 }

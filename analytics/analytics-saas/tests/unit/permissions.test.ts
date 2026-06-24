@@ -26,7 +26,7 @@ describe("permissions", () => {
 
   describe("resolveOwner", () => {
     it("returns userId if user is not a team member", async () => {
-      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(undefined);
 
       const result = await resolveOwner("user1");
 
@@ -69,7 +69,7 @@ describe("permissions", () => {
     });
 
     it("returns 'viewer' if user is not a member of the team", async () => {
-      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(undefined);
 
       const result = await getUserRole("user1", "owner1");
 
@@ -138,7 +138,7 @@ describe("permissions", () => {
     });
 
     it("returns false if user is not a member of the team", async () => {
-      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(undefined);
 
       const result = await canEditConfig("user1", "owner1");
 
@@ -167,7 +167,7 @@ describe("permissions", () => {
     });
 
     it("returns false if user is not a member of the team", async () => {
-      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(null);
+      vi.mocked(db.query.teamMembers.findFirst).mockResolvedValue(undefined);
 
       const result = await canViewConfig("user1", "owner1");
 

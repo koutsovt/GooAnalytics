@@ -4,6 +4,10 @@ export interface WebsiteData {
   topPages: { path: string; views: number }[];
   trafficSources: { source: string; sessions: number }[];
   engagementRate: number;
+  // Added later — optional so reports stored before this change still parse.
+  avgSessionDuration?: number; // seconds
+  dailySessions?: { date: string; sessions: number }[]; // date is YYYYMMDD
+  devices?: { device: string; sessions: number }[]; // device = mobile|desktop|tablet
 }
 
 export interface SearchData {

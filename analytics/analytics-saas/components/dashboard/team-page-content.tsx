@@ -98,13 +98,13 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
 
   return (
     <div>
-      <h1 className="text-4xl font-bold text-color-foreground mb-8">Team</h1>
+      <h1 className="text-4xl font-bold text-foreground mb-8">Team</h1>
 
-      <div className="rounded-lg border border-color-border bg-color-input p-6 max-w-md mb-8">
-        <h2 className="text-2xl font-bold text-color-foreground mb-4">Invite a Team Member</h2>
+      <div className="rounded-lg border border-border bg-input p-6 max-w-md mb-8">
+        <h2 className="text-2xl font-bold text-foreground mb-4">Invite a Team Member</h2>
         <form onSubmit={handleInvite} className="space-y-4">
           <div>
-            <label className="block text-base font-semibold text-color-foreground mb-2">
+            <label className="block text-base font-semibold text-foreground mb-2">
               Email
             </label>
             <input
@@ -112,18 +112,18 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 rounded-lg border border-color-border bg-color-input text-color-foreground"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
               placeholder="colleague@example.com"
             />
           </div>
           <div>
-            <label className="block text-base font-semibold text-color-foreground mb-2">
+            <label className="block text-base font-semibold text-foreground mb-2">
               Role
             </label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as "viewer" | "editor" | "admin")}
-              className="w-full px-3 py-2 rounded-lg border border-color-border bg-color-input text-color-foreground"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
             >
               <option value="viewer">Viewer (read-only)</option>
               <option value="editor">Editor (can modify configs)</option>
@@ -138,27 +138,27 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-3 rounded-lg bg-color-brand text-white font-bold text-base hover:bg-color-brand-dark transition-colors disabled:opacity-50"
+            className="px-4 py-3 rounded-lg bg-brand text-white font-bold text-base hover:bg-brand-dark transition-colors disabled:opacity-50"
           >
             {loading ? "Sending..." : "Send Invitation"}
           </button>
         </form>
       </div>
 
-      <div className="rounded-lg border border-color-border bg-color-input p-6 max-w-md mb-8">
-        <h2 className="text-2xl font-bold text-color-foreground mb-4">Members</h2>
+      <div className="rounded-lg border border-border bg-input p-6 max-w-md mb-8">
+        <h2 className="text-2xl font-bold text-foreground mb-4">Members</h2>
         {initialMembers.length === 0 ? (
-          <p className="text-color-foreground text-base font-medium">No members yet.</p>
+          <p className="text-foreground text-base font-medium">No members yet.</p>
         ) : (
           <ul className="space-y-3">
             {initialMembers.map((m) => (
               <li key={m.id} className="flex items-center justify-between">
                 <div>
-                  <p className="text-color-foreground text-base font-medium">{m.member.email}</p>
+                  <p className="text-foreground text-base font-medium">{m.member.email}</p>
                   <select
                     value={m.role}
                     onChange={(e) => handleChangeRole(m.memberId, e.target.value)}
-                    className="text-xs bg-color-input text-color-foreground border border-color-border rounded px-2 py-1"
+                    className="text-xs bg-input text-foreground border border-border rounded px-2 py-1"
                   >
                     <option value="viewer">Viewer</option>
                     <option value="editor">Editor</option>
@@ -177,21 +177,21 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
         )}
       </div>
 
-      <div className="rounded-lg border border-color-border bg-color-input p-6 max-w-md">
-        <h2 className="text-2xl font-bold text-color-foreground mb-4">Pending Invitations</h2>
+      <div className="rounded-lg border border-border bg-input p-6 max-w-md">
+        <h2 className="text-2xl font-bold text-foreground mb-4">Pending Invitations</h2>
         {pendingInvitations.length === 0 ? (
-          <p className="text-color-foreground text-base font-medium">No pending invitations.</p>
+          <p className="text-foreground text-base font-medium">No pending invitations.</p>
         ) : (
           <ul className="space-y-3">
             {pendingInvitations.map((inv) => (
               <li key={inv.id} className="flex items-center justify-between">
                 <div>
-                  <p className="text-color-foreground text-base font-medium">{inv.inviteeEmail}</p>
+                  <p className="text-foreground text-base font-medium">{inv.inviteeEmail}</p>
                   <div className="flex gap-2 items-center">
-                    <span className="text-sm text-color-foreground font-medium">
+                    <span className="text-sm text-foreground font-medium">
                       Expires in {getTimeUntilExpiry(inv.expiresAt)}
                     </span>
-                    <span className="text-sm text-color-foreground font-medium uppercase tracking-wide">
+                    <span className="text-sm text-foreground font-medium uppercase tracking-wide">
                       {inv.role}
                     </span>
                   </div>
@@ -199,7 +199,7 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleResendInvite(inv.id)}
-                    className="text-sm font-medium text-color-brand hover:underline"
+                    className="text-sm font-medium text-brand hover:underline"
                   >
                     Resend
                   </button>
@@ -216,8 +216,8 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
         )}
       </div>
 
-      <div className="rounded-lg border border-color-border bg-color-input p-6 max-w-2xl">
-        <h2 className="text-2xl font-bold text-color-foreground mb-4">Activity Log</h2>
+      <div className="rounded-lg border border-border bg-input p-6 max-w-2xl">
+        <h2 className="text-2xl font-bold text-foreground mb-4">Activity Log</h2>
         <AuditLogsViewer />
       </div>
     </div>

@@ -1,16 +1,7 @@
 "use client";
 
+import { BarChart3, Building2, CreditCard, FileText, Menu, Settings, Users, X } from "lucide-react";
 import { useState } from "react";
-import {
-  BarChart3,
-  FileText,
-  Building2,
-  Settings,
-  Users,
-  CreditCard,
-  Menu,
-  X,
-} from "lucide-react";
 import { NavLink } from "@/components/dashboard/nav-link";
 
 const navItems = [
@@ -30,17 +21,17 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-color-background">
+    <div className="flex min-h-screen bg-background">
       {/* Mobile hamburger button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-md hover:bg-color-muted"
+        className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-md hover:bg-muted"
         aria-label="Toggle menu"
       >
         {sidebarOpen ? (
-          <X className="h-6 w-6 text-color-foreground" strokeWidth={1.5} />
+          <X className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         ) : (
-          <Menu className="h-6 w-6 text-color-foreground" strokeWidth={1.5} />
+          <Menu className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         )}
       </button>
 
@@ -54,16 +45,14 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:relative inset-y-0 left-0 w-64 border-r border-color-border bg-color-card p-6 z-30 transform transition-transform md:transform-none ${
+        className={`fixed md:relative inset-y-0 left-0 w-64 border-r border-border bg-card p-6 z-30 transform transition-transform md:transform-none ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
         style={{ minHeight: "100vh" }}
       >
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-color-brand">AnalyticsIQ</h1>
-          <p className="text-xs text-color-muted-foreground mt-1">
-            Analytics Dashboard
-          </p>
+          <h1 className="text-2xl font-bold text-brand">AnalyticsIQ</h1>
+          <p className="text-xs text-muted-foreground mt-1">Analytics Dashboard</p>
         </div>
 
         <nav className="space-y-1">
@@ -76,9 +65,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 w-full md:w-auto p-4 md:p-8 pt-16 md:pt-8">
-        {children}
-      </main>
+      <main className="flex-1 w-full md:w-auto p-4 md:p-8 pt-16 md:pt-8">{children}</main>
     </div>
   );
 }

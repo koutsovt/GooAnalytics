@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { logger } from "@/lib/logger";
 import { whatsappWebhookQueue } from "@/lib/queue";
 
 export async function GET(req: Request) {
@@ -42,7 +43,7 @@ export async function POST(req: Request) {
     return Response.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("WhatsApp webhook error:", message);
+    logger.error("WhatsApp webhook error:", message);
     return Response.json({ error: message }, { status: 400 });
   }
 }

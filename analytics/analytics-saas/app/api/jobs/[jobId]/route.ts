@@ -1,4 +1,5 @@
 import type { Job } from "bullmq";
+import { logger } from "@/lib/logger";
 import { deliveryQueue, reportQueue } from "@/lib/queue";
 import type { ReportDeliveryJob, ReportGenerationJob } from "@/lib/queue/types";
 
@@ -29,7 +30,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ jobId: 
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to get job status:", message);
+    logger.error("Failed to get job status:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { reportConfigs } from "@/lib/db/schema";
 import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 import { reportQueue } from "@/lib/queue";
 
 function shouldRunNow(config: typeof reportConfigs.$inferSelect, now: Date): boolean {
@@ -89,7 +90,7 @@ export async function GET(request: Request) {
         );
         queued++;
       } catch (error) {
-        console.error(`Failed to queue report for config ${config.id}:`, error);
+        logger.error(`Failed to queue report for config ${config.id}:`, error);
       }
     }
 
@@ -102,7 +103,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Cron job failed:", message);
+    logger.error("Cron job failed:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { config as configDotenv } from "dotenv";
 import { join } from "path";
+import { logger } from "@/lib/logger";
 
 configDotenv({ path: join(process.cwd(), ".env.local") });
 
@@ -9,21 +10,21 @@ import { stripeWorker } from "@/workers/stripe.worker";
 
 const workers = [reportWorker, deliveryWorker, stripeWorker];
 
-console.log("🚀 Starting background workers...");
-console.log(`   • Report worker (queue: reports)`);
-console.log(`   • Delivery worker (queue: delivery)`);
-console.log(`   • Stripe worker (queue: stripe-webhooks)`);
+logger.info("🚀 Starting background workers...");
+logger.info(`   • Report worker (queue: reports)`);
+logger.info(`   • Delivery worker (queue: delivery)`);
+logger.info(`   • Stripe worker (queue: stripe-webhooks)`);
 
 async function gracefulShutdown() {
-  console.log("\n🛑 Shutting down workers...");
+  logger.info("\n🛑 Shutting down workers...");
   for (const worker of workers) {
     await worker.close();
   }
-  console.log("✓ All workers stopped");
+  logger.info("✓ All workers stopped");
   process.exit(0);
 }
 
 process.on("SIGINT", gracefulShutdown);
 process.on("SIGTERM", gracefulShutdown);
 
-console.log("✓ Workers ready, waiting for jobs...");
+logger.info("✓ Workers ready, waiting for jobs...");

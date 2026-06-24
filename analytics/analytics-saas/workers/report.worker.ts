@@ -5,6 +5,7 @@ import { generateBrief } from "@/lib/clients/anthropic";
 import { generateBriefWithGLM } from "@/lib/clients/glm";
 import { db } from "@/lib/db";
 import { reportConfigs, reportHistory } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import { getRedisConnection } from "@/lib/queue/connection";
 import type { ReportGenerationJob } from "@/lib/queue/types";
 import { fetchAnalyticsData } from "@/lib/services/analytics.service";
@@ -42,16 +43,20 @@ export const reportWorker = new Worker<ReportGenerationJob>(
         tokens,
         periodStart,
         periodEnd,
+        config.placeId ?? undefined,
       );
 
       job.log(`Generating brief with ${model}...`);
-      const brief = model === "glm" ? await generateBriefWithGLM(analyticsData) : await generateBrief(analyticsData);
+      const brief =
+        model === "glm"
+          ? await generateBriefWithGLM(analyticsData)
+          : await generateBrief(analyticsData);
 
       job.log("Storing report in history...");
       const period = `${periodStart}_to_${periodEnd}`;
       const reportId = `rpt_${userId}_${Date.now()}`;
 
-      console.log(`[Report] Saving report ${reportId}. Brief data:`, JSON.stringify(brief).substring(0, 100));
+      logger.debug("Saving report to history", { reportId });
 
       await db.insert(reportHistory).values({
         id: reportId,
@@ -64,7 +69,7 @@ export const reportWorker = new Worker<ReportGenerationJob>(
         createdAt: new Date(),
       });
 
-      console.log(`[Report] ✓ Report ${reportId} saved successfully`);
+      logger.info("Report saved", { reportId });
 
       job.log("Report generation complete");
       return { reportId, status: "success" };
@@ -72,15 +77,25 @@ export const reportWorker = new Worker<ReportGenerationJob>(
       const message = error instanceof Error ? error.message : "Unknown error";
       job.log(`Error: ${message}`);
 
-      await db.insert(reportHistory).values({
-        id: `rpt_${userId}_${Date.now()}`,
-        userId,
-        configId,
-        period: `${periodStart}_to_${periodEnd}`,
-        status: "error",
-        errorMessage: message,
-        createdAt: new Date(),
-      });
+      // BullMQ retries this job up to job.opts.attempts times. Inside the
+      // processor, attemptsMade is 0-based for the current run (it is incremented
+      // later, in moveToFailed), so the current run is the final one when
+      // attemptsMade + 1 >= attempts. Only persist the error row then, otherwise
+      // a single failing report writes one row per retry (3 duplicates by default).
+      const maxAttempts = job.opts.attempts ?? 1;
+      const isFinalAttempt = job.attemptsMade + 1 >= maxAttempts;
+
+      if (isFinalAttempt) {
+        await db.insert(reportHistory).values({
+          id: `rpt_${userId}_${Date.now()}`,
+          userId,
+          configId,
+          period: `${periodStart}_to_${periodEnd}`,
+          status: "error",
+          errorMessage: message,
+          createdAt: new Date(),
+        });
+      }
 
       throw error;
     }
@@ -89,9 +104,9 @@ export const reportWorker = new Worker<ReportGenerationJob>(
 );
 
 reportWorker.on("completed", (job) => {
-  console.log(`✓ Report job ${job.id} completed`);
+  logger.info(`✓ Report job ${job.id} completed`);
 });
 
 reportWorker.on("failed", (job, err) => {
-  console.error(`✗ Report job ${job?.id} failed:`, err instanceof Error ? err.message : err);
+  logger.error(`✗ Report job ${job?.id} failed:`, err instanceof Error ? err.message : err);
 });

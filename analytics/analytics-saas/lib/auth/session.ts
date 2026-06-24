@@ -1,38 +1,14 @@
-import crypto from "crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { signToken, verifyToken } from "@/lib/auth/session-token";
 import { env } from "@/lib/env";
 
 const SESSION_COOKIE_NAME = "session";
 const SESSION_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
-function signCookie(value: string, secret: string): string {
-  const hmac = crypto.createHmac("sha256", secret);
-  hmac.update(value);
-  return `${value}.${hmac.digest("hex")}`;
-}
-
-function verifyCookie(signedValue: string, secret: string): string | null {
-  const [value, signature] = signedValue.split(".");
-  if (!value || !signature) return null;
-
-  const hmac = crypto.createHmac("sha256", secret);
-  hmac.update(value);
-  const expected = hmac.digest("hex");
-
-  try {
-    if (crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-      return value;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
 export async function setSessionCookie(userId: string): Promise<void> {
   const cookieStore = await cookies();
-  const signedCookie = signCookie(userId, env.AUTH_SECRET);
+  const signedCookie = await signToken(userId, env.AUTH_SECRET);
 
   cookieStore.set(SESSION_COOKIE_NAME, signedCookie, {
     httpOnly: true,
@@ -49,7 +25,7 @@ export async function getSession(): Promise<string | null> {
 
   if (!signedCookie) return null;
 
-  return verifyCookie(signedCookie, env.AUTH_SECRET);
+  return verifyToken(signedCookie, env.AUTH_SECRET);
 }
 
 export async function requireSession(): Promise<string> {

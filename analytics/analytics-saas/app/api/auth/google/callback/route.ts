@@ -1,24 +1,35 @@
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { exchangeCodeForTokens, upsertTokenRow } from "@/lib/auth/google-oauth";
+import { exchangeCodeForTokens, OAUTH_STATE_COOKIE, upsertTokenRow } from "@/lib/auth/google-oauth";
 import { setSessionCookie } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
+  const state = searchParams.get("state");
   const error = searchParams.get("error");
 
   if (error) {
-    return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(error)}`, request.url)
-    );
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, request.url));
   }
 
   if (!code) {
     return NextResponse.redirect(new URL("/login?error=missing_code", request.url));
+  }
+
+  // CSRF protection: the state echoed back by Google must match the one we set
+  // in the httpOnly cookie when starting the flow. A missing/mismatched state
+  // means this callback was not initiated by this browser — reject it.
+  const cookieStore = await cookies();
+  const expectedState = cookieStore.get(OAUTH_STATE_COOKIE)?.value;
+  cookieStore.delete(OAUTH_STATE_COOKIE);
+
+  if (!state || !expectedState || state !== expectedState) {
+    return NextResponse.redirect(new URL("/login?error=invalid_state", request.url));
   }
 
   try {
@@ -62,10 +73,10 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(new URL("/dashboard", request.url));
   } catch (error) {
-    console.error("OAuth callback failed:", error);
+    logger.error("OAuth callback failed:", error);
     const errorMsg = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(errorMsg)}`, request.url)
+      new URL(`/login?error=${encodeURIComponent(errorMsg)}`, request.url),
     );
   }
 }

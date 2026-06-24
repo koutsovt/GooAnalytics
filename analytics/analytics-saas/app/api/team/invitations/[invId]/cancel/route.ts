@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import { requireSession } from "@/lib/auth/session";
-import { logTeamAudit } from "@/lib/services/audit.service";
 import { db } from "@/lib/db";
 import { teamInvitations } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
+import { logTeamAudit } from "@/lib/services/audit.service";
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ invId: string }> }) {
   try {
@@ -37,7 +38,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ invI
     return Response.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to cancel invitation:", message);
+    logger.error("Failed to cancel invitation:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

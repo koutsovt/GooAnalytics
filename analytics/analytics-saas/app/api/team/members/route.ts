@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
-import { requireSession } from "@/lib/auth/session";
 import { canManageTeam } from "@/lib/auth/permissions";
+import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { teamInvitations, teamMembers } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -30,7 +31,7 @@ export async function GET() {
     return Response.json({ members, invitations });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to fetch team members:", message);
+    logger.error("Failed to fetch team members:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }

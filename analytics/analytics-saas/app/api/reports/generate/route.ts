@@ -1,10 +1,13 @@
 import { eq } from "drizzle-orm";
-import { requireSession } from "@/lib/auth/session";
+import { canEditConfig } from "@/lib/auth/permissions";
 import { resolveOwner } from "@/lib/auth/resolve-owner";
+import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { reportConfigs } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import { reportQueue } from "@/lib/queue";
 import type { ReportGenerationJob } from "@/lib/queue/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -39,8 +42,21 @@ export async function POST(req: Request) {
       return Response.json({ error: "Config not found" }, { status: 404 });
     }
 
-    if (config.userId !== ownerId) {
+    // Generating a report consumes Google API quota and a paid LLM call, so it
+    // is an edit-level action: owners/admins/editors only, never viewers. This
+    // also rejects configs from another workspace (canEditConfig is false when
+    // the caller is not a member of the config owner's team).
+    if (!(await canEditConfig(userId, config.userId))) {
       return Response.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    // Throttle per workspace owner to bound quota/LLM cost from rapid retries.
+    const limit = await rateLimit(`reports:generate:${ownerId}`, 10, 60);
+    if (!limit.ok) {
+      return Response.json(
+        { error: "Too many report requests. Please wait a moment and try again." },
+        { status: 429, headers: { "Retry-After": String(limit.resetSeconds) } },
+      );
     }
 
     const job = await reportQueue.add(
@@ -70,7 +86,7 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Failed to enqueue report:", message);
+    logger.error("Failed to enqueue report:", message);
     return Response.json({ error: message }, { status: 500 });
   }
 }
