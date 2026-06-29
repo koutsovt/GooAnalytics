@@ -9,9 +9,13 @@ type Config = typeof reportConfigs.$inferSelect;
 
 interface PropertiesPageContentProps {
   initialConfigs: Config[];
+  defaultEmail: string;
 }
 
-export function PropertiesPageContent({ initialConfigs }: PropertiesPageContentProps) {
+export function PropertiesPageContent({
+  initialConfigs,
+  defaultEmail,
+}: PropertiesPageContentProps) {
   const [configs, setConfigs] = useState(initialConfigs);
   const [showForm, setShowForm] = useState(false);
   const [editingConfig, setEditingConfig] = useState<Config | null>(null);
@@ -47,7 +51,12 @@ export function PropertiesPageContent({ initialConfigs }: PropertiesPageContentP
           <h2 className="text-lg font-semibold text-foreground mb-4">
             {editingConfig ? "Edit Property" : "Add New Property"}
           </h2>
-          <ConfigForm config={editingConfig ?? undefined} onClose={handleClose} onSuccess={handleSuccess} />
+          <ConfigForm
+            config={editingConfig ?? undefined}
+            defaultEmail={defaultEmail}
+            onClose={handleClose}
+            onSuccess={handleSuccess}
+          />
         </div>
       ) : null}
 

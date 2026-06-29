@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { exchangeCodeForTokens, OAUTH_STATE_COOKIE, upsertTokenRow } from "@/lib/auth/google-oauth";
 import { setSessionCookie } from "@/lib/auth/session";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import { users } from "@/lib/db/schema";
 import { logger } from "@/lib/logger";
 
@@ -13,12 +14,17 @@ export async function GET(request: Request) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
+  // Base all redirects on the public app URL. Behind Railway's proxy, request.url
+  // resolves to the internal host (localhost:8080), which would send the browser
+  // to localhost. NEXT_PUBLIC_APP_URL is the real public origin.
+  const baseUrl = env.NEXT_PUBLIC_APP_URL;
+
   if (error) {
-    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, request.url));
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error)}`, baseUrl));
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL("/login?error=missing_code", request.url));
+    return NextResponse.redirect(new URL("/login?error=missing_code", baseUrl));
   }
 
   // CSRF protection: the state echoed back by Google must match the one we set
@@ -29,7 +35,7 @@ export async function GET(request: Request) {
   cookieStore.delete(OAUTH_STATE_COOKIE);
 
   if (!state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(new URL("/login?error=invalid_state", request.url));
+    return NextResponse.redirect(new URL("/login?error=invalid_state", baseUrl));
   }
 
   try {
@@ -71,12 +77,10 @@ export async function GET(request: Request) {
     await upsertTokenRow(user.id, tokens);
     await setSessionCookie(user.id);
 
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/dashboard", baseUrl));
   } catch (error) {
     logger.error("OAuth callback failed:", error);
     const errorMsg = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(errorMsg)}`, request.url),
-    );
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(errorMsg)}`, baseUrl));
   }
 }

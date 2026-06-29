@@ -1,3 +1,4 @@
+import { google } from "googleapis";
 import type { GoogleTokens } from "@/lib/auth/google-oauth";
 import { buildAuthClient } from "@/lib/auth/google-oauth";
 import { logger } from "@/lib/logger";
@@ -30,6 +31,49 @@ interface ListReviewsResponse {
   averageRating?: number;
   totalReviewCount?: number;
   nextPageToken?: string;
+}
+
+// Lists the Google Business Profile locations the logged-in user can manage,
+// returning the full resource name ("accounts/{acc}/locations/{loc}") that the
+// reviews endpoint expects, plus a human-readable title. Mirrors the GA4
+// property listing so the UI can offer a pick-list instead of a raw ID field.
+// Requires the `https://www.googleapis.com/auth/business.manage` scope.
+export async function listGBPLocations(
+  tokens: GoogleTokens,
+): Promise<{ locationId: string; displayName: string }[]> {
+  const authClient = buildAuthClient(tokens);
+
+  const accountMgmt = google.mybusinessaccountmanagement({ version: "v1", auth: authClient });
+  const businessInfo = google.mybusinessbusinessinformation({ version: "v1", auth: authClient });
+
+  const accountsRes = await accountMgmt.accounts.list({ pageSize: 100 });
+  const accounts = accountsRes.data.accounts ?? [];
+
+  const locations: { locationId: string; displayName: string }[] = [];
+
+  for (const account of accounts) {
+    const accountName = account.name; // e.g. "accounts/123"
+    if (!accountName) continue;
+
+    const locationsRes = await businessInfo.accounts.locations.list({
+      parent: accountName,
+      readMask: "name,title",
+      pageSize: 100,
+    });
+
+    for (const loc of locationsRes.data.locations ?? []) {
+      // loc.name is "locations/{id}"; the reviews API needs the account-scoped
+      // resource "accounts/{acc}/locations/{id}".
+      const locName = loc.name?.replace(/^locations\//, "");
+      if (!locName) continue;
+      locations.push({
+        locationId: `${accountName}/locations/${locName}`,
+        displayName: loc.title ?? "Unnamed location",
+      });
+    }
+  }
+
+  return locations;
 }
 
 export async function fetchReputationData(

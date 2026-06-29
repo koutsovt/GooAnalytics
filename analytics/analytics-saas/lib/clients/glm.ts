@@ -44,11 +44,9 @@ export async function generateBriefWithGLM(data: BriefData): Promise<ReportOutpu
     throw new Error("Z_AI_API_KEY is invalid or not set");
   }
 
-  // glm-4.7 "thinks compulsorily" when thinking is enabled (z.ai's default),
-  // burning ~3000 reasoning tokens per call: ~115s latency and a real risk of the
-  // visible JSON answer being truncated mid-string. This brief is a plain
-  // data-to-prose task that needs no chain of thought, so disable thinking — it
-  // drops the call to ~20s with clean, complete JSON.
+  // This brief is a plain data-to-prose task that needs no chain of thought, so
+  // disable thinking — it keeps the call fast and returns clean, complete JSON
+  // instead of burning reasoning tokens and risking a mid-string truncation.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60_000);
 
@@ -61,7 +59,7 @@ export async function generateBriefWithGLM(data: BriefData): Promise<ReportOutpu
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "glm-4.7",
+        model: "glm-5.2",
         messages: [
           {
             role: "user",

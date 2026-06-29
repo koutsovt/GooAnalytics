@@ -1,23 +1,27 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GA4PropertySelector } from "@/components/dashboard/ga4-property-selector";
+import { GBPLocationSelector } from "@/components/dashboard/gbp-location-selector";
 import { Button } from "@/components/ui/button";
 import type { reportConfigs } from "@/lib/db/schema";
 
 interface ConfigFormProps {
   config?: typeof reportConfigs.$inferSelect;
+  defaultEmail?: string;
   onClose?: () => void;
   onSuccess?: () => void | Promise<void>;
 }
 
-export function ConfigForm({ config, onClose, onSuccess }: ConfigFormProps) {
-  const router = useRouter();
+export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigFormProps) {
   const [ga4PropertyId, setGa4PropertyId] = useState(config?.ga4PropertyId ?? "");
   const [gscSiteUrl, setGscSiteUrl] = useState(config?.gscSiteUrl ?? "");
   const [gbpLocationId, setGbpLocationId] = useState(config?.gbpLocationId ?? "");
-  const [recipientEmail, setRecipientEmail] = useState(config?.recipientEmail ?? "");
+  // Default a new property's recipient to the logged-in user's email; an
+  // existing config keeps its saved value.
+  const [recipientEmail, setRecipientEmail] = useState(
+    config?.recipientEmail ?? defaultEmail ?? "",
+  );
   const [recipientPhone, setRecipientPhone] = useState(config?.recipientPhone ?? "");
   const [scheduleFrequency, setScheduleFrequency] = useState(
     config?.scheduleFrequency ?? "monthly",
@@ -124,17 +128,18 @@ export function ConfigForm({ config, onClose, onSuccess }: ConfigFormProps) {
 
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Google Business Profile Location ID
+            Google Business Profile Location
           </label>
-          <p className="text-xs text-muted-foreground mb-2">
-            Your Business Profile API location resource name, used to pull reviews. This is NOT a
-            Maps Place ID (ChIJ…) — it comes from the Business Profile API.
+          <p className="text-xs text-muted-foreground mb-3">
+            Select the location to pull reviews from. If none appear, enter the location resource
+            name manually below.
           </p>
+          <GBPLocationSelector value={gbpLocationId} onChange={setGbpLocationId} />
           <input
             type="text"
             value={gbpLocationId}
             onChange={(e) => setGbpLocationId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
+            className="w-full mt-3 px-3 py-2 rounded-lg border border-border bg-input text-foreground"
             placeholder="e.g., accounts/123456789/locations/987654321"
           />
         </div>
