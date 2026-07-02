@@ -94,7 +94,51 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }) {
         </div>
       )}
 
-      <div className="rounded-lg border border-border overflow-hidden bg-card">
+      {/* Mobile: stacked cards so View/Deliver stay reachable on small screens */}
+      <div className="space-y-3 md:hidden">
+        {reports.map((report) => (
+          <div
+            key={report.id}
+            className={`rounded-lg border border-border bg-card p-4 ${
+              selected.has(report.id) ? "bg-muted/40" : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <label className="flex items-start gap-3 min-w-0">
+                <input
+                  type="checkbox"
+                  checked={selected.has(report.id)}
+                  onChange={() => toggleOne(report.id)}
+                  aria-label={`Select report ${report.period}`}
+                  className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-brand"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm font-mono text-foreground">{report.period}</span>
+                  <span className="block text-sm text-muted-foreground truncate">
+                    {report.subjectLine || "—"}
+                  </span>
+                </span>
+              </label>
+              <Badge variant={statusVariant(report.status)}>{report.status}</Badge>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{report.createdAtLabel}</span>
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/reports/${report.id}`}
+                  className="text-brand hover:underline font-medium text-sm"
+                >
+                  View
+                </Link>
+                <DeliverButton reportId={report.id} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: full table */}
+      <div className="hidden md:block rounded-lg border border-border overflow-x-auto bg-card">
         <table className="w-full">
           <thead className="bg-muted border-b border-border">
             <tr>
