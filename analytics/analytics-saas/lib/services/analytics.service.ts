@@ -96,6 +96,10 @@ async function resolveCompetitors(
   placeId: string | undefined,
 ): Promise<{ data: CompetitorData | undefined; connected: boolean }> {
   if (!placeId || !env.GOOGLE_MAPS_API_KEY) {
+    logger.info("Competitors skipped", {
+      reason: !placeId ? "no placeId on config" : "GOOGLE_MAPS_API_KEY not set",
+      businessName,
+    });
     return { data: undefined, connected: false };
   }
 
@@ -103,6 +107,12 @@ async function resolveCompetitors(
     // Fall back to the business name as a search query when no type is stored.
     const query = businessType?.trim() || businessName;
     const competitors = await findNearbyCompetitors(placeId, query, placeId);
+    logger.info("Competitor discovery result", {
+      businessName,
+      query,
+      found: competitors.length,
+      pricesEnabled: env.COMPETITOR_PRICES_ENABLED,
+    });
     if (competitors.length === 0) {
       return { data: undefined, connected: false };
     }
