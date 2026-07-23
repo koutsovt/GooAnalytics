@@ -460,6 +460,15 @@ export function ReportView({
         </div>
       </header>
 
+      {/* TEMP DEBUG — remove after diagnosing competitor render. Prints the raw
+          competitor state so we can see data-vs-render on the page itself. */}
+      <div className="px-8 py-2 bg-yellow-100 text-yellow-900 text-xs font-mono border-b border-yellow-300">
+        DEBUG competitors: present={String(Boolean(rawData?.competitors))} · count=
+        {rawData?.competitors?.competitors?.length ?? "n/a"} · connFlag=
+        {String(rawData?.connections?.competitors ?? "n/a")} · rawDataKeys=
+        {rawData ? Object.keys(rawData).join(",") : "NO rawData"}
+      </div>
+
       {/* Hero: the bottom line */}
       <section className="px-8 py-8 bg-slate-900 text-slate-100">
         <div className="flex items-center gap-3 mb-6">
