@@ -26,15 +26,26 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
     new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
   );
   const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split("T")[0]);
-  const [loading, setLoading] = useState(false);
+  // `generating` stays true for the whole queued→polling window (~1-2 min), not
+  // just the brief POST, so the button can't be re-clicked to queue duplicate
+  // jobs while a report is still being built.
+  const [generating, setGenerating] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const stopPolling = () => {
+  // Clears the interval only. Used both to tear down before a new poll and (via
+  // finishGenerating) when generation ends.
+  const clearPoll = () => {
     if (pollRef.current) {
       clearInterval(pollRef.current);
       pollRef.current = null;
     }
+  };
+
+  // End of the generation lifecycle: stop polling AND re-enable the button.
+  const finishGenerating = () => {
+    clearPoll();
+    setGenerating(false);
   };
 
   // Clear any in-flight poll when the component unmounts.
@@ -45,18 +56,21 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
   }, []);
 
   const startPolling = () => {
-    stopPolling();
+    clearPoll();
     let tries = 0;
     pollRef.current = setInterval(() => {
       tries += 1;
       router.refresh();
-      if (tries >= POLL_MAX_TRIES) stopPolling();
+      if (tries >= POLL_MAX_TRIES) finishGenerating();
     }, POLL_INTERVAL_MS);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    // Guard against a double-submit landing before React re-renders the disabled
+    // button (e.g. a fast double-click or Enter key repeat).
+    if (generating) return;
+    setGenerating(true);
     setStatus({ kind: "idle" });
 
     try {
@@ -74,19 +88,21 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
 
       if (!response.ok) {
         setStatus({ kind: "error", message: result.error ?? "Failed to queue report" });
+        finishGenerating();
         return;
       }
 
       setStatus({ kind: "queued", jobId: result.jobId });
       router.refresh();
+      // Keep the button disabled through polling; finishGenerating() re-enables it
+      // when the poll window ends (~2 min, covering the ~1-2 min generation).
       startPolling();
     } catch (error) {
       setStatus({
         kind: "error",
         message: error instanceof Error ? error.message : "Failed to queue report",
       });
-    } finally {
-      setLoading(false);
+      finishGenerating();
     }
   };
 
@@ -145,10 +161,11 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
             <div className="flex items-end">
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full px-6 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                disabled={generating}
+                aria-busy={generating}
+                className="w-full px-6 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "Generating..." : "Generate"}
+                {generating ? "Generating…" : "Generate"}
               </button>
             </div>
           </div>
