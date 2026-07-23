@@ -42,23 +42,44 @@ export function buildBriefPrompt(data: BriefData): string {
     data.connections.competitors && data.competitors
       ? (() => {
           const c = data.competitors;
-          const own = c.ownServices.length
-            ? c.ownServices.map((s) => `${s.name} ${s.raw}`).join("; ")
-            : "not published on your own site";
+          // Fresh reports always set `comparable`; derive it for any legacy data.
+          const comparable = c.comparable ?? {
+            servicePrices: c.competitors.some((x) => x.services.length > 0),
+            priceLevel: c.competitors.some((x) => x.priceLevel != null),
+            rating: c.competitors.some((x) => x.rating > 0),
+          };
+          // Only describe metrics the server flagged as comparable across this set.
           const rows = c.competitors
             .map((comp) => {
               const dist = comp.distanceKm != null ? `${comp.distanceKm}km away` : "nearby";
               const rating =
                 comp.rating > 0 ? `${comp.rating}/5 (${comp.totalReviews} reviews)` : "no rating";
-              const price = `price level ${priceDollars(comp.priceLevel)}`;
-              const services = comp.services.length
-                ? `; approx prices: ${comp.services.map((s) => `${s.name} ${s.raw}`).join(", ")}`
+              const price = comparable.priceLevel
+                ? `, price level ${priceDollars(comp.priceLevel)}`
                 : "";
-              return `  - ${comp.name}: ${dist}, ${rating}, ${price}${services}`;
+              const services =
+                comparable.servicePrices && comp.services.length
+                  ? `; approx prices: ${comp.services.map((s) => `${s.name} ${s.raw}`).join(", ")}`
+                  : "";
+              return `  - ${comp.name}: ${dist}, ${rating}${price}${services}`;
             })
             .join("\n");
+
+          // Pricing framing depends on what's actually comparable. When no
+          // competitor exposes prices there is nothing to compare on price, so we
+          // do NOT dump the owner's price list — we tell the model the useful,
+          // honest angle instead.
+          const pricingLine = comparable.servicePrices
+            ? `- Your own published prices (for comparison): ${
+                c.ownServices.length
+                  ? c.ownServices.map((s) => `${s.name} ${s.raw}`).join("; ")
+                  : "not published on your own site"
+              }`
+            : `- PRICE COMPARISON UNAVAILABLE: none of these nearby salons publish prices we could read, so there is nothing to compare on price. Do NOT present a price comparison or quote rival prices. The only honest price angle here is that publishing clear prices on the owner's own site is a way to stand out, since rivals don't — mention this only if it's genuinely useful.`;
+
           return `COMPETITOR LANDSCAPE (${c.competitors.length} nearby ${c.competitors.length === 1 ? "business" : "businesses"}, currency ${c.currency})
-- Your own published prices: ${own}
+- Comparable metrics across this set: rating=${comparable.rating ? "yes" : "no"}, price band=${comparable.priceLevel ? "yes" : "no"}, published prices=${comparable.servicePrices ? "yes" : "no"}. ONLY draw comparisons on metrics marked "yes".
+${pricingLine}
 - Nearby competitors (nearest first):
 ${rows || "  - No competitors found"}`;
         })()

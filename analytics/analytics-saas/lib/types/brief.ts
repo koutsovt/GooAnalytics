@@ -62,6 +62,24 @@ export interface CompetitorData {
   currency: string; // inferred, default "GBP" for Terence London
   competitors: Competitor[]; // capped, nearest first
   ownServices: CompetitorService[]; // owner's own prices, same extraction path
+  // Which metrics are actually COMPARABLE across the salons in this set, computed
+  // server-side so the UI and brief only surface what can be fairly compared.
+  // A one-sided metric (e.g. only the owner has scraped prices) is set false and
+  // its data is stripped before serialization — don't show a comparison that
+  // isn't one.
+  // Optional so reports serialized before this field still parse; the UI derives
+  // a fallback when absent.
+  comparable?: {
+    // At least one competitor exposes scraped service prices, so owner-vs-rival
+    // price lists are a real comparison. When false, service price lists are
+    // dropped from competitors AND ownServices.
+    servicePrices: boolean;
+    // At least one competitor has a Google price-level band ($–$$$$), so the
+    // Price column/band is meaningful. When false, priceLevel is nulled out.
+    priceLevel: boolean;
+    // At least one competitor has a real Google rating.
+    rating: boolean;
+  };
 }
 
 export interface BriefData {

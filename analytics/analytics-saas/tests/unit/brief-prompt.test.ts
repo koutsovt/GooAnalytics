@@ -19,6 +19,7 @@ const competitors: CompetitorData = {
       servicesSource: "website",
     },
   ],
+  comparable: { servicePrices: true, priceLevel: true, rating: true },
 };
 
 function baseData(overrides: Partial<BriefData> = {}): BriefData {
@@ -68,6 +69,42 @@ describe("buildBriefPrompt competitor section", () => {
     expect(prompt).toContain("from £35");
     expect(prompt).toContain("Men's Cut £30"); // owner's own published price
     expect(prompt).toContain("price level $$"); // priceLevel 2 → $$
+  });
+
+  it("omits price comparison when no competitor exposes prices", () => {
+    // Rivals with no scraped prices AND no price band → nothing to compare on
+    // price. The prompt must NOT dump the owner's price list or a price column.
+    const noPrice: CompetitorData = {
+      currency: "AUD",
+      ownServices: [], // stripped by the service when not comparable
+      competitors: [
+        {
+          placeId: "ChIJ_a",
+          name: "Azzy Hair",
+          websiteUri: "https://azzy.example/",
+          googleMapsUri: "https://maps.google.com/?cid=9",
+          distanceKm: 0.3,
+          rating: 4.8,
+          totalReviews: 184,
+          priceLevel: null,
+          services: [],
+          servicesSource: "none",
+        },
+      ],
+      comparable: { servicePrices: false, priceLevel: false, rating: true },
+    };
+    const prompt = buildBriefPrompt(
+      baseData({ competitors: noPrice, connections: { ga4: true, gbp: true, competitors: true } }),
+    );
+    expect(prompt).toContain("PRICE COMPARISON UNAVAILABLE");
+    expect(prompt).toContain("published prices=no");
+    expect(prompt).toContain("price band=no");
+    // The per-rival DATA row must not carry a price band or scraped prices.
+    // ("price level" also appears in the static rules, so target the data row.)
+    expect(prompt).not.toContain("Azzy Hair: 0.3km away, 4.8/5 (184 reviews), price level");
+    expect(prompt).not.toContain("approx prices");
+    // Owner's price list must not be dumped when there's nothing to compare.
+    expect(prompt).not.toContain("Your own published prices (for comparison)");
   });
 
   it("instructs the model to explain rating gaps by review volume and to learn from rivals", () => {

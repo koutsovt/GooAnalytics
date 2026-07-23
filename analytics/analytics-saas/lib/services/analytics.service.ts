@@ -10,7 +10,13 @@ import {
 } from "@/lib/clients/places";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import type { BriefData, Competitor, CompetitorData, ReputationData } from "@/lib/types/brief";
+import type {
+  BriefData,
+  Competitor,
+  CompetitorData,
+  CompetitorService,
+  ReputationData,
+} from "@/lib/types/brief";
 import { sameHost } from "@/lib/url";
 
 const EMPTY_REPUTATION: ReputationData = {
@@ -93,6 +99,47 @@ async function resolveReputation(
 //     competitor's + the owner's own site for an explicit price list.
 // No-ops (returns disconnected) without an owner placeId or a Maps key. Any
 // failure leaves competitors undefined so the report still ships.
+// Decide which metrics are genuinely COMPARABLE across this salon set and strip
+// anything that isn't, so the client and brief never surface a one-sided
+// "comparison". Rules:
+//   - servicePrices comparable only if ≥1 competitor has scraped prices. If not,
+//     drop every service price list (owner's included) — a lone price list is not
+//     a comparison, it's just the owner's menu.
+//   - priceLevel comparable only if ≥1 competitor has a Google band; else null
+//     them all so the UI can hide the Price column.
+//   - rating comparable if ≥1 competitor has a real rating.
+export function buildComparableCompetitorData(
+  currency: string,
+  competitors: Competitor[],
+  ownServices: CompetitorService[],
+): CompetitorData {
+  const anyCompetitorPrices = competitors.some((c) => c.services.length > 0);
+  const anyPriceLevel = competitors.some((c) => c.priceLevel != null);
+  const anyRating = competitors.some((c) => c.rating > 0);
+
+  const normalizedCompetitors = competitors.map((c) => ({
+    ...c,
+    // Only keep scraped prices when the metric is comparable across the set.
+    services: anyCompetitorPrices ? c.services : [],
+    servicesSource: anyCompetitorPrices ? c.servicesSource : ("none" as const),
+    // Only keep the band when at least one rival also has one.
+    priceLevel: anyPriceLevel ? c.priceLevel : null,
+  }));
+
+  return {
+    currency,
+    competitors: normalizedCompetitors,
+    // Owner's own prices are only useful as a COMPARISON; drop them from the
+    // serialized comparison when no competitor exposes prices.
+    ownServices: anyCompetitorPrices ? ownServices : [],
+    comparable: {
+      servicePrices: anyCompetitorPrices,
+      priceLevel: anyPriceLevel,
+      rating: anyRating,
+    },
+  };
+}
+
 async function resolveCompetitors(
   gscSiteUrl: string,
   businessName: string,
@@ -157,10 +204,8 @@ async function resolveCompetitors(
       });
     }
 
-    return {
-      data: { currency, competitors, ownServices },
-      connected: true,
-    };
+    const data = buildComparableCompetitorData(currency, competitors, ownServices);
+    return { data, connected: true };
   } catch (err) {
     logger.warn(
       "Competitor landscape unavailable:",

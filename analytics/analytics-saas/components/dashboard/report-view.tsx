@@ -328,10 +328,19 @@ function ServiceList({
   );
 }
 
-function CompetitorRow({ competitor, currency }: { competitor: Competitor; currency: string }) {
+function CompetitorRow({
+  competitor,
+  currency,
+  showPrice,
+}: {
+  competitor: Competitor;
+  currency: string;
+  showPrice: boolean;
+}) {
+  const cols = showPrice ? "grid-cols-[1fr_auto_auto]" : "grid-cols-[1fr_auto]";
   return (
     <div className="py-3 border-b border-border last:border-0">
-      <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-4 text-sm">
+      <div className={`grid ${cols} items-baseline gap-4 text-sm`}>
         <div className="min-w-0">
           {competitor.websiteUri ? (
             <a
@@ -359,9 +368,11 @@ function CompetitorRow({ competitor, currency }: { competitor: Competitor; curre
             <span className="text-muted-foreground">—</span>
           )}
         </div>
-        <div className="text-right">
-          <PricePills level={competitor.priceLevel} />
-        </div>
+        {showPrice && (
+          <div className="text-right">
+            <PricePills level={competitor.priceLevel} />
+          </div>
+        )}
       </div>
       <ServiceList services={competitor.services} currency={currency} />
     </div>
@@ -375,35 +386,52 @@ function CompetitorLandscape({
   data: CompetitorData;
   businessName: string;
 }) {
+  // Reports stored before comparability was added won't carry `comparable`;
+  // derive it from the data so old reports still render sensibly.
+  const comparable = data.comparable ?? {
+    servicePrices: data.competitors.some((c) => c.services.length > 0),
+    priceLevel: data.competitors.some((c) => c.priceLevel != null),
+    rating: data.competitors.some((c) => c.rating > 0),
+  };
+  // Only show the Price column when at least one competitor has a comparable
+  // price band — a column of dashes is noise, not a comparison.
+  const showPrice = comparable.priceLevel;
+  // Owner price list is only shown as part of a real comparison (when ≥1 rival
+  // also exposes prices); the service strips ownServices otherwise.
+  const showOwnPrices = comparable.servicePrices && data.ownServices.length > 0;
+  const headerCols = showPrice ? "grid-cols-[1fr_auto_auto]" : "grid-cols-[1fr_auto]";
+
   return (
     <section className="px-8 py-7 border-b border-border">
       <SectionLabel>Competitor landscape</SectionLabel>
-      <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-4 pb-2 border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
+      <div
+        className={`grid ${headerCols} items-baseline gap-4 pb-2 border-b border-border text-xs uppercase tracking-wider text-muted-foreground`}
+      >
         <span>Business</span>
         <span className="text-right">Rating</span>
-        <span className="text-right">Price</span>
+        {showPrice && <span className="text-right">Price</span>}
       </div>
       {/* Owner row, highlighted for comparison. */}
       <div className="py-3 border-b border-border bg-muted/30 -mx-2 px-2 rounded">
-        <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-4 text-sm">
+        <div className={`grid ${headerCols} items-baseline gap-4 text-sm`}>
           <span className="font-semibold text-brand truncate">{businessName} (you)</span>
           <span />
-          <span />
+          {showPrice && <span />}
         </div>
-        {data.ownServices.length > 0 ? (
-          <ServiceList services={data.ownServices} currency={data.currency} />
-        ) : (
-          <p className="mt-1 text-xs text-muted-foreground">
-            Your prices aren’t published on your site — customers can’t compare at a glance.
-          </p>
-        )}
+        {showOwnPrices && <ServiceList services={data.ownServices} currency={data.currency} />}
       </div>
       {data.competitors.map((c) => (
-        <CompetitorRow key={c.placeId} competitor={c} currency={data.currency} />
+        <CompetitorRow
+          key={c.placeId}
+          competitor={c}
+          currency={data.currency}
+          showPrice={showPrice}
+        />
       ))}
       <p className="mt-4 text-xs text-muted-foreground/70">
-        Nearby businesses from Google Maps. Prices are approximate, pulled from each business’s
-        public website, and may be incomplete — verify before acting.
+        {comparable.servicePrices
+          ? "Nearby businesses from Google Maps. Prices are approximate, pulled from each business’s public website, and may be incomplete — verify before acting."
+          : "Nearby businesses from Google Maps. None of them publish prices we could read, so this compares reach and reputation, not price."}
       </p>
     </section>
   );
