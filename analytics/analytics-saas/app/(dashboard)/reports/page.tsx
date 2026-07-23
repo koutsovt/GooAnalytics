@@ -36,7 +36,9 @@ export default async function ReportsPage() {
             period: report.period,
             subjectLine: report.reportData?.subjectLine ?? null,
             status: report.status,
-            createdAtLabel: report.createdAt ? report.createdAt.toLocaleDateString() : "—",
+            createdAtLabel: report.createdAt
+              ? report.createdAt.toLocaleDateString("en-AU", { timeZone: "Australia/Sydney" })
+              : "—",
           }))}
         />
       )}

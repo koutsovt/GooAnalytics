@@ -20,6 +20,13 @@ export default async function ReportDetailPage({
     },
   });
 
+  // Format the generated timestamp in the config's timezone (default Sydney),
+  // not the server's UTC — otherwise a report made at 9:26pm AEST shows "11:26am".
+  const tz = report?.config?.scheduleTimezone || "Australia/Sydney";
+  const createdAtLabel = report?.createdAt
+    ? report.createdAt.toLocaleString("en-AU", { timeZone: tz })
+    : "—";
+
   if (!report) {
     return (
       <div className="text-center py-12">
@@ -44,9 +51,7 @@ export default async function ReportDetailPage({
               Report failed
             </div>
             <h1 className="text-3xl font-bold text-foreground">{report.period}</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Generated {report.createdAt?.toLocaleString() ?? "—"}
-            </p>
+            <p className="mt-2 text-sm text-muted-foreground">Generated {createdAtLabel}</p>
           </div>
           <div className="px-8 py-6">
             <p className="text-sm text-foreground mb-2 font-medium">What went wrong</p>
@@ -59,7 +64,7 @@ export default async function ReportDetailPage({
         <ReportView
           businessName={report.rawData?.businessName ?? report.config?.businessName ?? "Report"}
           period={report.period}
-          createdAtLabel={report.createdAt?.toLocaleString() ?? "—"}
+          createdAtLabel={createdAtLabel}
           reportData={report.reportData}
           rawData={report.rawData}
         />
