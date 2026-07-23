@@ -110,7 +110,10 @@ export async function generateBriefWithGLM(data: BriefData): Promise<ReportOutpu
   }
 
   if (!parsed.summary || !parsed.actions || !parsed.subjectLine) {
-    throw new Error("Invalid response structure from GLM");
+    // Surface which keys came back so a recurrence is diagnosable from
+    // report_history.errorMessage instead of a blind "invalid structure".
+    const keys = Object.keys(parsed).join(", ") || "(none)";
+    throw new Error(`Invalid response structure from GLM — got keys: [${keys}]`);
   }
 
   if (!Array.isArray(parsed.actions) || parsed.actions.length !== 3) {
