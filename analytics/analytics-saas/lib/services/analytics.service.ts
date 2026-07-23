@@ -92,13 +92,6 @@ async function resolveReputation(
   return { reputation: EMPTY_REPUTATION, connected: false };
 }
 
-// Competitor landscape resolution (mirrors resolveReputation). Two layers:
-//   Layer 1 (reliable): discover nearby same-category businesses via Places and
-//     pull rating, review count, and coarse priceLevel.
-//   Layer 2 (best-effort, behind COMPETITOR_PRICES_ENABLED): scrape each
-//     competitor's + the owner's own site for an explicit price list.
-// No-ops (returns disconnected) without an owner placeId or a Maps key. Any
-// failure leaves competitors undefined so the report still ships.
 // Decide which metrics are genuinely COMPARABLE across this salon set and strip
 // anything that isn't, so the client and brief never surface a one-sided
 // "comparison". Rules:
@@ -140,6 +133,13 @@ export function buildComparableCompetitorData(
   };
 }
 
+// Competitor landscape resolution (mirrors resolveReputation). Two layers:
+//   Layer 1 (reliable): discover nearby same-category businesses via Places and
+//     pull rating, review count, and coarse priceLevel.
+//   Layer 2 (best-effort, behind COMPETITOR_PRICES_ENABLED): scrape each
+//     competitor's + the owner's own site for an explicit price list.
+// No-ops (returns disconnected) without an owner placeId or a Maps key. Any
+// failure leaves competitors undefined so the report still ships.
 async function resolveCompetitors(
   gscSiteUrl: string,
   businessName: string,
