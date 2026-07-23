@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { extractServicePrices, findNearbyCompetitors } from "@/lib/clients/competitors";
+import { fetchPlacePrimaryType } from "@/lib/clients/places";
 import { fetchAnalyticsData } from "@/lib/services/analytics.service";
 
 vi.mock("@/lib/clients/ga4", () => ({
@@ -24,6 +25,7 @@ vi.mock("@/lib/clients/gbp", () => ({ fetchReputationData: vi.fn() }));
 vi.mock("@/lib/clients/places", () => ({
   fetchPlacesReputation: vi.fn().mockResolvedValue(null),
   fetchPlacesReputationByPlaceId: vi.fn().mockResolvedValue(null),
+  fetchPlacePrimaryType: vi.fn().mockResolvedValue(""),
 }));
 vi.mock("@/lib/clients/competitors", () => ({
   findNearbyCompetitors: vi.fn(),
@@ -72,6 +74,7 @@ async function run(placeId: string | undefined, businessType?: string) {
 describe("fetchAnalyticsData competitor resolution", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(fetchPlacePrimaryType).mockResolvedValue("");
     envMock.GOOGLE_MAPS_API_KEY = "test-key";
     envMock.COMPETITOR_PRICES_ENABLED = false;
   });
@@ -90,14 +93,20 @@ describe("fetchAnalyticsData competitor resolution", () => {
     expect(data.competitors?.ownServices).toEqual([]);
   });
 
-  it("falls back to the business name when no businessType is stored", async () => {
+  it("backfills the query from Google's primary category when no businessType is stored", async () => {
+    vi.mocked(fetchPlacePrimaryType).mockResolvedValue("Hair Salon");
     vi.mocked(findNearbyCompetitors).mockResolvedValue([{ ...competitor }]);
     await run("ChIJ_owner");
-    expect(findNearbyCompetitors).toHaveBeenCalledWith(
-      "ChIJ_owner",
-      "Terence London",
-      "ChIJ_owner",
-    );
+    expect(fetchPlacePrimaryType).toHaveBeenCalledWith("ChIJ_owner");
+    expect(findNearbyCompetitors).toHaveBeenCalledWith("ChIJ_owner", "Hair Salon", "ChIJ_owner");
+  });
+
+  it("skips discovery when no businessType and no Google category are available", async () => {
+    vi.mocked(fetchPlacePrimaryType).mockResolvedValue("");
+    const data = await run("ChIJ_owner");
+    expect(findNearbyCompetitors).not.toHaveBeenCalled();
+    expect(data.competitors).toBeUndefined();
+    expect(data.connections.competitors).toBe(false);
   });
 
   it("enriches with scraped prices when COMPETITOR_PRICES_ENABLED is on", async () => {

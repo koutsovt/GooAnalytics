@@ -38,6 +38,7 @@ interface PlacesPlace {
   displayName?: PlacesLocalizedText;
   websiteUri?: string;
   googleMapsUri?: string;
+  primaryTypeDisplayName?: PlacesLocalizedText;
   rating?: number;
   userRatingCount?: number;
   reviews?: PlacesReview[];
@@ -106,16 +107,22 @@ function toPlacesReputation(
  * Returns the id plus the matched website so the caller can verify it's the
  * right business before storing it. Null when nothing matches.
  */
-export async function resolvePlaceId(
-  query: string,
-): Promise<{ placeId: string; websiteUri: string; displayName: string } | null> {
+export async function resolvePlaceId(query: string): Promise<{
+  placeId: string;
+  websiteUri: string;
+  displayName: string;
+  primaryType: string;
+} | null> {
   const key = requireKey();
   const res = await fetch(PLACES_SEARCH_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": key,
-      "X-Goog-FieldMask": "places.id,places.displayName,places.websiteUri",
+      // primaryTypeDisplayName gives us Google's own human category (e.g. "Hair
+      // Salon") which seeds competitor discovery far better than a domain name.
+      "X-Goog-FieldMask":
+        "places.id,places.displayName,places.websiteUri,places.primaryTypeDisplayName",
     },
     body: JSON.stringify({ textQuery: query, pageSize: 1 }),
   });
@@ -133,7 +140,30 @@ export async function resolvePlaceId(
     placeId: place.id,
     websiteUri: place.websiteUri ?? "",
     displayName: place.displayName?.text ?? query,
+    primaryType: place.primaryTypeDisplayName?.text ?? "",
   };
+}
+
+/**
+ * Fetch a place's human category (e.g. "Hair Salon") by Place ID. Used to
+ * backfill competitor discovery for configs created before business_type was
+ * captured. Returns "" on any miss/error — never throws to the caller.
+ */
+export async function fetchPlacePrimaryType(placeId: string): Promise<string> {
+  try {
+    const key = requireKey();
+    const res = await fetch(`${PLACES_DETAILS_URL}/${encodeURIComponent(placeId)}`, {
+      headers: {
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": "primaryTypeDisplayName",
+      },
+    });
+    if (!res.ok) return "";
+    const place = (await res.json()) as PlacesPlace;
+    return place.primaryTypeDisplayName?.text ?? "";
+  } catch {
+    return "";
+  }
 }
 
 /**

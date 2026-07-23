@@ -3,7 +3,11 @@ import { extractServicePrices, findNearbyCompetitors } from "@/lib/clients/compe
 import { fetchGA4Data } from "@/lib/clients/ga4";
 import { fetchReputationData } from "@/lib/clients/gbp";
 import { fetchGSCData } from "@/lib/clients/gsc";
-import { fetchPlacesReputation, fetchPlacesReputationByPlaceId } from "@/lib/clients/places";
+import {
+  fetchPlacePrimaryType,
+  fetchPlacesReputation,
+  fetchPlacesReputationByPlaceId,
+} from "@/lib/clients/places";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import type { BriefData, Competitor, CompetitorData, ReputationData } from "@/lib/types/brief";
@@ -104,8 +108,21 @@ async function resolveCompetitors(
   }
 
   try {
-    // Fall back to the business name as a search query when no type is stored.
-    const query = businessType?.trim() || businessName;
+    // Search query priority: stored business_type → Google's primary category
+    // (backfill for older configs that never captured a type) → nothing. We do
+    // NOT fall back to businessName because it's the domain (e.g.
+    // "terencelondon.com.au"), which returns zero nearby matches.
+    let query = businessType?.trim() ?? "";
+    if (!query) {
+      query = (await fetchPlacePrimaryType(placeId)).trim();
+    }
+    if (!query) {
+      logger.info("Competitors skipped", {
+        reason: "no business_type and no Google primary category",
+        businessName,
+      });
+      return { data: undefined, connected: false };
+    }
     const competitors = await findNearbyCompetitors(placeId, query, placeId);
     logger.info("Competitor discovery result", {
       businessName,

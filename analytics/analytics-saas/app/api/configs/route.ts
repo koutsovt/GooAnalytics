@@ -91,10 +91,15 @@ export async function POST(req: Request) {
     // error leaves placeId null and the report-time text-search fallback handles
     // reputation — it must never block config creation.
     let placeId: string | null = null;
+    // Google's own primary category (e.g. "Hair Salon") seeds competitor
+    // discovery far better than the domain name. Captured here once, alongside
+    // the Place ID, so future reports search the right thing.
+    let businessType: string | null = null;
     try {
       const resolved = await resolvePlaceId(businessName);
       if (resolved && sameHost(resolved.websiteUri, gscSiteUrl)) {
         placeId = resolved.placeId;
+        businessType = resolved.primaryType || null;
       }
     } catch (err) {
       logger.warn("Place ID resolution skipped:", err instanceof Error ? err.message : err);
@@ -109,6 +114,7 @@ export async function POST(req: Request) {
       gscSiteUrl,
       gbpLocationId,
       placeId,
+      businessType,
       recipientEmail,
       recipientPhone,
       scheduleFrequency: scheduleFrequency ?? "monthly",
