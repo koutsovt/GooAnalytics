@@ -70,6 +70,15 @@ describe("buildBriefPrompt competitor section", () => {
     expect(prompt).toContain("price level $$"); // priceLevel 2 → $$
   });
 
+  it("instructs the model to explain rating gaps by review volume and to learn from rivals", () => {
+    // These analysis rules ship in every prompt, but they are what makes the
+    // report explain WHY a 5.0-from-30 differs from a 4.9-from-129 and mine
+    // competitors for owner-doable improvements.
+    const prompt = buildBriefPrompt(baseData());
+    expect(prompt).toContain("EXPLAIN RATING DIFFERENCES using review VOLUME");
+    expect(prompt).toContain("LEARN FROM COMPETITORS");
+  });
+
   it("adds the approximate-pricing positioning rule only when connected", () => {
     const off = buildBriefPrompt(baseData());
     const on = buildBriefPrompt(
