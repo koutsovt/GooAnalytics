@@ -77,6 +77,7 @@ describe("buildBriefPrompt competitor section", () => {
     const prompt = buildBriefPrompt(baseData());
     expect(prompt).toContain("EXPLAIN RATING DIFFERENCES using review VOLUME");
     expect(prompt).toContain("LEARN FROM COMPETITORS");
+    expect(prompt).toContain("WHAT THE PRICE PICTURE MEANS FOR THE OWNER");
   });
 
   it("adds the approximate-pricing positioning rule only when connected", () => {
