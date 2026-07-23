@@ -35,6 +35,7 @@ export async function generateReport(
     periodStart,
     periodEnd,
     config.placeId ?? undefined,
+    config.businessType ?? undefined,
   );
 
   const brief = await generateBrief(analyticsData);

@@ -22,6 +22,12 @@ export const env = createEnv({
     // Google Maps Places API (New) key. Self-service, key-based, no GBP approval
     // needed. Powers public review/rating data via lib/clients/places.ts.
     GOOGLE_MAPS_API_KEY: z.string().default(""),
+    // Gates Layer 2 competitor price extraction (fetch + LLM scrape of rival
+    // sites). Off by default — discovery/rating/priceLevel work without it.
+    COMPETITOR_PRICES_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
     CRON_SECRET: z.string().min(32),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
@@ -47,6 +53,7 @@ export const env = createEnv({
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     Z_AI_API_KEY: process.env.Z_AI_API_KEY || "",
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || "",
+    COMPETITOR_PRICES_ENABLED: process.env.COMPETITOR_PRICES_ENABLED || "false",
     CRON_SECRET: process.env.CRON_SECRET,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,

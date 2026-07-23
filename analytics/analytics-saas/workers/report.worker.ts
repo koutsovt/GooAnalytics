@@ -44,6 +44,7 @@ export const reportWorker = new Worker<ReportGenerationJob>(
         periodStart,
         periodEnd,
         config.placeId ?? undefined,
+        config.businessType ?? undefined,
       );
 
       job.log(`Generating brief with ${model}...`);

@@ -1,0 +1,1 @@
+ALTER TABLE "report_configs" ADD COLUMN "competitor_place_ids" json;

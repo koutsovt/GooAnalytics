@@ -35,6 +35,35 @@ export function buildBriefPrompt(data: BriefData): string {
     : `REPUTATION
 - NOT CONNECTED: review and rating data is UNKNOWN. Do not claim the business has zero reviews or no reviews.`;
 
+  const priceDollars = (level: number | null): string =>
+    level && level >= 1 && level <= 4 ? "$".repeat(level) : "unknown";
+
+  const competitorSection =
+    data.connections.competitors && data.competitors
+      ? (() => {
+          const c = data.competitors;
+          const own = c.ownServices.length
+            ? c.ownServices.map((s) => `${s.name} ${s.raw}`).join("; ")
+            : "not published on your own site";
+          const rows = c.competitors
+            .map((comp) => {
+              const dist = comp.distanceKm != null ? `${comp.distanceKm}km away` : "nearby";
+              const rating =
+                comp.rating > 0 ? `${comp.rating}/5 (${comp.totalReviews} reviews)` : "no rating";
+              const price = `price level ${priceDollars(comp.priceLevel)}`;
+              const services = comp.services.length
+                ? `; approx prices: ${comp.services.map((s) => `${s.name} ${s.raw}`).join(", ")}`
+                : "";
+              return `  - ${comp.name}: ${dist}, ${rating}, ${price}${services}`;
+            })
+            .join("\n");
+          return `COMPETITOR LANDSCAPE (${c.competitors.length} nearby ${c.competitors.length === 1 ? "business" : "businesses"}, currency ${c.currency})
+- Your own published prices: ${own}
+- Nearby competitors (nearest first):
+${rows || "  - No competitors found"}`;
+        })()
+      : "";
+
   return `You are a trusted advisor writing a monthly website brief for a small business owner who is NOT technical (think: a hairdresser, a cafe owner). Write the way you would explain it to them across a table — warm, plain-English, owner-to-owner. A vivid everyday comparison is welcome when it makes a point land. Never use jargon without immediately saying what it means in normal words.
 
 Business: ${data.businessName}
@@ -62,7 +91,13 @@ ${
 ${localSection}
 
 ${reputationSection}
-
+${
+  competitorSection
+    ? `
+${competitorSection}
+`
+    : ""
+}
 HOW TO ANALYSE — think like a growth analyst, not a cheerleader:
 - Prioritise the 3 actions by impact, not by ease. NEVER recommend editing or "optimising" a page that got negligible traffic (a few views) — that is wasted effort. Put the actions where the visitors and the money actually are.
 - Drop-off: if one page (usually the homepage) holds the large majority of views while other pages get almost none, visitors are not progressing. The high-value fix is a clearer next step FROM that page (prices, booking, gallery) — not editing the deep pages nobody reaches.
@@ -71,6 +106,7 @@ HOW TO ANALYSE — think like a growth analyst, not a cheerleader:
 - Brand vs non-brand: the business's own name converting well is expected and not an achievement. Real growth comes from winning non-brand local searches ("hairdresser <suburb>", "<service> near me"). Judge those on their own merits.
 - Conversion blind spot: if customer actions (calls, directions, bookings) are NOT MEASURED, you may note ONCE in the summary prose that off-site actions aren't tracked yet. But when website traffic (GA4) IS connected, linking analytics / connecting a data feed / "getting your web person to connect tracking" is BANNED from the actions array entirely — it is not action #1, #2, or #3. Owners cannot self-serve it and the data we already have (website visits, search, reputation) is enough to give three real, owner-doable actions. The ONLY time a measurement-setup step may be an action is when WEBSITE TRAFFIC is NOT CONNECTED (then connecting Google Analytics is allowed as the top action).
 - Treat very large month-on-month changes (≥ ~100%) with caution: they usually mean the prior month was only partially tracked. Frame it as establishing a baseline, not as real growth.
+- COMPETITOR LANDSCAPE (only if that section is present): use it for positioning, not price warfare. All competitor prices are APPROXIMATE, scraped from their public websites and often incomplete — NEVER claim you are cheaper/pricier than a named rival by an exact amount, and never state a competitor's exact price as fact. Frame it in plain positioning terms ("there are a few salons within a couple of kilometres; on the prices we could see, you sit mid-range" or "you're the priciest nearby but also the best-rated, which is a story worth telling"). The Google "price level" is a rough $–$$$$ band, not a real price. If prices weren't published, say the useful thing is simply that customers can't compare — which is an argument for putting YOUR prices clearly on your own site. At MOST ONE of the 3 actions may be about competitor positioning, and it must still be something the owner can do themselves (e.g. publish/clarify prices, lean into a rating advantage in their listing) — never "undercut competitor X".
 
 HOW TO WRITE THE 3 ACTIONS — owner-to-owner, in priority order (most valuable first):
 - Each action is ONE short paragraph (2–3 sentences) that does three things, in this order: (1) say in plain words what the data means / why it matters, (2) tell them the specific thing to DO about it, (3) signal the effort and payoff (e.g. "quick website change, big payoff" or "slow burn that compounds").

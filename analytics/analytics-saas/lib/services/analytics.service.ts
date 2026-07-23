@@ -1,11 +1,12 @@
 import type { GoogleTokens } from "@/lib/auth/google-oauth";
+import { extractServicePrices, findNearbyCompetitors } from "@/lib/clients/competitors";
 import { fetchGA4Data } from "@/lib/clients/ga4";
 import { fetchReputationData } from "@/lib/clients/gbp";
 import { fetchGSCData } from "@/lib/clients/gsc";
 import { fetchPlacesReputation, fetchPlacesReputationByPlaceId } from "@/lib/clients/places";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import type { BriefData, ReputationData } from "@/lib/types/brief";
+import type { BriefData, Competitor, CompetitorData, ReputationData } from "@/lib/types/brief";
 import { sameHost } from "@/lib/url";
 
 const EMPTY_REPUTATION: ReputationData = {
@@ -81,6 +82,67 @@ async function resolveReputation(
   return { reputation: EMPTY_REPUTATION, connected: false };
 }
 
+// Competitor landscape resolution (mirrors resolveReputation). Two layers:
+//   Layer 1 (reliable): discover nearby same-category businesses via Places and
+//     pull rating, review count, and coarse priceLevel.
+//   Layer 2 (best-effort, behind COMPETITOR_PRICES_ENABLED): scrape each
+//     competitor's + the owner's own site for an explicit price list.
+// No-ops (returns disconnected) without an owner placeId or a Maps key. Any
+// failure leaves competitors undefined so the report still ships.
+async function resolveCompetitors(
+  gscSiteUrl: string,
+  businessName: string,
+  businessType: string | undefined,
+  placeId: string | undefined,
+): Promise<{ data: CompetitorData | undefined; connected: boolean }> {
+  if (!placeId || !env.GOOGLE_MAPS_API_KEY) {
+    return { data: undefined, connected: false };
+  }
+
+  try {
+    // Fall back to the business name as a search query when no type is stored.
+    const query = businessType?.trim() || businessName;
+    const competitors = await findNearbyCompetitors(placeId, query, placeId);
+    if (competitors.length === 0) {
+      return { data: undefined, connected: false };
+    }
+
+    let currency = "GBP";
+    let ownServices: CompetitorData["ownServices"] = [];
+
+    if (env.COMPETITOR_PRICES_ENABLED) {
+      // Extract prices for the owner + each competitor in parallel, capped by the
+      // list size (already ≤ 5). Each call swallows its own errors.
+      const [own, ...enriched] = await Promise.all([
+        extractServicePrices(gscSiteUrl, businessName),
+        ...competitors.map((c) => extractServicePrices(c.websiteUri, c.name)),
+      ]);
+      ownServices = own.services;
+      if (own.services.length > 0) currency = own.currency;
+
+      competitors.forEach((c: Competitor, i) => {
+        const ex = enriched[i];
+        if (ex && ex.services.length > 0) {
+          c.services = ex.services;
+          c.servicesSource = "website";
+          currency = ex.currency;
+        }
+      });
+    }
+
+    return {
+      data: { currency, competitors, ownServices },
+      connected: true,
+    };
+  } catch (err) {
+    logger.warn(
+      "Competitor landscape unavailable:",
+      err instanceof Error ? err.message : String(err),
+    );
+    return { data: undefined, connected: false };
+  }
+}
+
 export async function fetchAnalyticsData(
   businessName: string,
   ga4PropertyId: string | undefined,
@@ -90,8 +152,9 @@ export async function fetchAnalyticsData(
   periodStart: string,
   periodEnd: string,
   placeId?: string,
+  businessType?: string,
 ): Promise<BriefData> {
-  const [{ website, local }, search, reputationResult] = await Promise.all([
+  const [{ website, local }, search, reputationResult, competitorResult] = await Promise.all([
     ga4PropertyId
       ? fetchGA4Data(ga4PropertyId, tokens, periodStart, periodEnd)
       : Promise.resolve({
@@ -121,6 +184,7 @@ export async function fetchAnalyticsData(
       periodStart,
       periodEnd,
     ),
+    resolveCompetitors(gscSiteUrl, businessName, businessType, placeId),
   ]);
 
   return {
@@ -130,9 +194,11 @@ export async function fetchAnalyticsData(
     search,
     local,
     reputation: reputationResult.reputation,
+    competitors: competitorResult.data,
     connections: {
       ga4: Boolean(ga4PropertyId),
       gbp: reputationResult.connected,
+      competitors: competitorResult.connected,
     },
   };
 }

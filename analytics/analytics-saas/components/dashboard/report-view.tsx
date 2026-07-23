@@ -1,4 +1,4 @@
-import type { BriefData, ReportOutput } from "@/lib/types/brief";
+import type { BriefData, Competitor, CompetitorData, ReportOutput } from "@/lib/types/brief";
 
 interface ReportViewProps {
   businessName: string;
@@ -72,7 +72,13 @@ function RatingRing({ rating }: { rating: number }) {
   const fraction = Math.max(0, Math.min(1, rating / 5));
   const dash = fraction * circumference;
   return (
-    <svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label={`${rating} out of 5`}>
+    <svg
+      viewBox="0 0 120 120"
+      width="120"
+      height="120"
+      role="img"
+      aria-label={`${rating} out of 5`}
+    >
       <circle cx="60" cy="60" r={r} fill="none" stroke="var(--color-muted)" strokeWidth="14" />
       <circle
         cx="60"
@@ -95,7 +101,14 @@ function RatingRing({ rating }: { rating: number }) {
       >
         {rating.toFixed(1)}
       </text>
-      <text x="60" y="76" textAnchor="middle" fontSize="9" letterSpacing="2" fill="var(--color-muted-foreground)">
+      <text
+        x="60"
+        y="76"
+        textAnchor="middle"
+        fontSize="9"
+        letterSpacing="2"
+        fill="var(--color-muted-foreground)"
+      >
         OUT OF 5
       </text>
     </svg>
@@ -145,12 +158,32 @@ function DailyVisitsChart({ data }: { data: { date: string; sessions: number }[]
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Daily visits" className="w-full h-auto">
       {gridYs.map((gy, i) => (
-        <line key={i} x1={padL} y1={gy} x2={padL + innerW} y2={gy} stroke="var(--color-border)" strokeWidth={1} />
+        <line
+          key={i}
+          x1={padL}
+          y1={gy}
+          x2={padL + innerW}
+          y2={gy}
+          stroke="var(--color-border)"
+          strokeWidth={1}
+        />
       ))}
-      <text x={padL - 6} y={padT + 4} textAnchor="end" fontSize={9} fill="var(--color-muted-foreground)">
+      <text
+        x={padL - 6}
+        y={padT + 4}
+        textAnchor="end"
+        fontSize={9}
+        fill="var(--color-muted-foreground)"
+      >
         {max}
       </text>
-      <text x={padL - 6} y={padT + innerH} textAnchor="end" fontSize={9} fill="var(--color-muted-foreground)">
+      <text
+        x={padL - 6}
+        y={padT + innerH}
+        textAnchor="end"
+        fontSize={9}
+        fill="var(--color-muted-foreground)"
+      >
         0
       </text>
       <polygon points={areaPts} fill="var(--color-brand)" opacity={0.1} />
@@ -176,7 +209,13 @@ function DailyVisitsChart({ data }: { data: { date: string; sessions: number }[]
       <text x={padL} y={H - 8} textAnchor="start" fontSize={9} fill="var(--color-muted-foreground)">
         {formatYmd(data[0].date)}
       </text>
-      <text x={padL + innerW} y={H - 8} textAnchor="end" fontSize={9} fill="var(--color-muted-foreground)">
+      <text
+        x={padL + innerW}
+        y={H - 8}
+        textAnchor="end"
+        fontSize={9}
+        fill="var(--color-muted-foreground)"
+      >
         {formatYmd(data[data.length - 1].date)}
       </text>
     </svg>
@@ -196,7 +235,13 @@ function DeviceDonut({ devices }: { devices: { device: string; sessions: number 
 
   return (
     <div className="flex items-center gap-5">
-      <svg viewBox="0 0 120 120" width="104" height="104" role="img" aria-label={`${topPct}% ${top.device}`}>
+      <svg
+        viewBox="0 0 120 120"
+        width="104"
+        height="104"
+        role="img"
+        aria-label={`${topPct}% ${top.device}`}
+      >
         <circle cx="60" cy="60" r={r} fill="none" stroke="var(--color-muted)" strokeWidth="15" />
         <circle
           cx="60"
@@ -208,10 +253,24 @@ function DeviceDonut({ devices }: { devices: { device: string; sessions: number 
           strokeDasharray={`${dash} ${circumference - dash}`}
           transform="rotate(-90 60 60)"
         />
-        <text x="60" y="57" textAnchor="middle" fontSize="24" fontWeight="700" fill="var(--color-foreground)">
+        <text
+          x="60"
+          y="57"
+          textAnchor="middle"
+          fontSize="24"
+          fontWeight="700"
+          fill="var(--color-foreground)"
+        >
           {topPct}%
         </text>
-        <text x="60" y="74" textAnchor="middle" fontSize="8" letterSpacing="1.5" fill="var(--color-muted-foreground)">
+        <text
+          x="60"
+          y="74"
+          textAnchor="middle"
+          fontSize="8"
+          letterSpacing="1.5"
+          fill="var(--color-muted-foreground)"
+        >
           {top.device.toUpperCase()}
         </text>
       </svg>
@@ -230,6 +289,123 @@ function DeviceDonut({ devices }: { devices: { device: string; sessions: number 
         ))}
       </ul>
     </div>
+  );
+}
+
+// Coarse Google price level (1–4) as $ pills; renders a muted em dash when unknown.
+function PricePills({ level }: { level: number | null }) {
+  if (!level || level < 1 || level > 4) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  return (
+    <span className="font-mono" role="img" aria-label={`price level ${level} of 4`}>
+      <span className="text-foreground font-semibold">{"$".repeat(level)}</span>
+      <span className="text-muted-foreground/50">{"$".repeat(4 - level)}</span>
+    </span>
+  );
+}
+
+function ServiceList({
+  services,
+  currency,
+}: {
+  services: { name: string; raw: string }[];
+  currency: string;
+}) {
+  if (services.length === 0) return null;
+  return (
+    <ul className="mt-2 space-y-1 text-sm">
+      {services.map((s) => (
+        <li key={`${s.name}-${s.raw}`} className="flex justify-between gap-4">
+          <span className="text-foreground">{s.name}</span>
+          <span className="font-mono text-muted-foreground whitespace-nowrap">{s.raw}</span>
+        </li>
+      ))}
+      <li className="pt-1 text-xs text-muted-foreground/70">
+        Approx, from their website ({currency})
+      </li>
+    </ul>
+  );
+}
+
+function CompetitorRow({ competitor, currency }: { competitor: Competitor; currency: string }) {
+  return (
+    <div className="py-3 border-b border-border last:border-0">
+      <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-4 text-sm">
+        <div className="min-w-0">
+          {competitor.websiteUri ? (
+            <a
+              href={competitor.websiteUri}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground hover:text-brand truncate block"
+            >
+              {competitor.name}
+            </a>
+          ) : (
+            <span className="font-medium text-foreground truncate block">{competitor.name}</span>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {competitor.distanceKm != null ? `${competitor.distanceKm} km away` : "nearby"}
+          </span>
+        </div>
+        <div className="text-right whitespace-nowrap">
+          {competitor.rating > 0 ? (
+            <>
+              <span className="font-semibold text-foreground">{competitor.rating.toFixed(1)}</span>
+              <span className="text-muted-foreground"> ({fmt(competitor.totalReviews)})</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </div>
+        <div className="text-right">
+          <PricePills level={competitor.priceLevel} />
+        </div>
+      </div>
+      <ServiceList services={competitor.services} currency={currency} />
+    </div>
+  );
+}
+
+function CompetitorLandscape({
+  data,
+  businessName,
+}: {
+  data: CompetitorData;
+  businessName: string;
+}) {
+  return (
+    <section className="px-8 py-7 border-b border-border">
+      <SectionLabel>Competitor landscape</SectionLabel>
+      <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-4 pb-2 border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
+        <span>Business</span>
+        <span className="text-right">Rating</span>
+        <span className="text-right">Price</span>
+      </div>
+      {/* Owner row, highlighted for comparison. */}
+      <div className="py-3 border-b border-border bg-muted/30 -mx-2 px-2 rounded">
+        <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-4 text-sm">
+          <span className="font-semibold text-brand truncate">{businessName} (you)</span>
+          <span />
+          <span />
+        </div>
+        {data.ownServices.length > 0 ? (
+          <ServiceList services={data.ownServices} currency={data.currency} />
+        ) : (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Your prices aren’t published on your site — customers can’t compare at a glance.
+          </p>
+        )}
+      </div>
+      {data.competitors.map((c) => (
+        <CompetitorRow key={c.placeId} competitor={c} currency={data.currency} />
+      ))}
+      <p className="mt-4 text-xs text-muted-foreground/70">
+        Nearby businesses from Google Maps. Prices are approximate, pulled from each business’s
+        public website, and may be incomplete — verify before acting.
+      </p>
+    </section>
   );
 }
 
@@ -307,8 +483,8 @@ export function ReportView({
               </div>
               <p className="mt-4 text-slate-300 max-w-sm leading-relaxed">
                 {pct(local.bookings, website.sessions)}% of the{" "}
-                <span className="text-white font-medium">{fmt(website.sessions)}</span> visitors took a
-                real step toward an appointment this period.
+                <span className="text-white font-medium">{fmt(website.sessions)}</span> visitors
+                took a real step toward an appointment this period.
               </p>
             </div>
             <div className="divide-y divide-white/10">
@@ -433,11 +609,12 @@ export function ReportView({
               <RatingRing rating={reputation.averageRating} />
               <div className="text-sm">
                 <p className="text-foreground">
-                  <span className="font-semibold">{fmt(reputation.totalReviews)}</span> total reviews
+                  <span className="font-semibold">{fmt(reputation.totalReviews)}</span> total
+                  reviews
                 </p>
                 <p className="mt-1 text-foreground">
-                  <span className="font-semibold">{fmt(reputation.newReviewsThisMonth)}</span> new this
-                  period
+                  <span className="font-semibold">{fmt(reputation.newReviewsThisMonth)}</span> new
+                  this period
                 </p>
                 {reputation.newReviews[0] && (
                   <p className="mt-3 text-muted-foreground italic line-clamp-3">
@@ -447,7 +624,10 @@ export function ReportView({
               </div>
             </div>
           ) : (
-            <NotConnected source="Business Profile" reason="Review and rating data is unavailable." />
+            <NotConnected
+              source="Business Profile"
+              reason="Review and rating data is unavailable."
+            />
           )}
         </div>
       </section>
@@ -531,6 +711,11 @@ export function ReportView({
             <Bar key={p.path} label={p.path} value={p.views} max={pagesMax} />
           ))}
         </section>
+      )}
+
+      {/* Competitor landscape */}
+      {rawData?.competitors && rawData.competitors.competitors.length > 0 && (
+        <CompetitorLandscape data={rawData.competitors} businessName={businessName} />
       )}
 
       {/* Takeaway */}

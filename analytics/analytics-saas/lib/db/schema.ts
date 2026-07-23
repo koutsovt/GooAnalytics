@@ -59,6 +59,9 @@ export const reportConfigs = pgTable(
     // creation, then used for deterministic Places review lookups. Null until
     // resolved (or if no public listing matches the site).
     placeId: varchar("place_id", { length: 255 }),
+    // Optional list of pinned competitor Place IDs (ChIJ…). Null → auto-discover
+    // nearby same-category businesses from the owner's placeId at report time.
+    competitorPlaceIds: json("competitor_place_ids").$type<string[]>(),
     businessName: varchar("business_name", { length: 255 }).notNull(),
     businessType: varchar("business_type", { length: 255 }),
     activeChannels: json("active_channels").default(["email"]),

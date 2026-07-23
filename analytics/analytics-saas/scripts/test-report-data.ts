@@ -46,9 +46,12 @@ async function main() {
     tokens,
     start,
     end,
+    cfg.placeId ?? undefined,
+    cfg.businessType ?? undefined,
   );
 
   console.log("connections:", JSON.stringify(data.connections));
+  console.log("competitors:", JSON.stringify(data.competitors, null, 2));
   console.log("reputation :", JSON.stringify(data.reputation, null, 2));
 }
 

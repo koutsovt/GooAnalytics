@@ -57,6 +57,13 @@
       "when": 1782298260545,
       "tag": "0007_blushing_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784797498915,
+      "tag": "0008_robust_mentor",
+      "breakpoints": true
     }
   ]
 }
