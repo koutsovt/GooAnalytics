@@ -1,6 +1,6 @@
 import { env } from "@/lib/env";
 import { buildBriefPrompt } from "@/lib/prompts/brief";
-import type { BriefData, ReportOutput } from "@/lib/types/brief";
+import type { BriefData, PriorReport, ReportOutput } from "@/lib/types/brief";
 
 // The model returns a pretty-printed JSON object whose string values (the
 // summary) contain real newlines between paragraphs. Raw control characters
@@ -36,8 +36,11 @@ function escapeControlCharsInStrings(input: string): string {
   return out;
 }
 
-export async function generateBriefWithGLM(data: BriefData): Promise<ReportOutput> {
-  const prompt = buildBriefPrompt(data);
+export async function generateBriefWithGLM(
+  data: BriefData,
+  prior?: PriorReport,
+): Promise<ReportOutput> {
+  const prompt = buildBriefPrompt(data, prior);
   const apiKey = env.Z_AI_API_KEY;
 
   if (!apiKey || apiKey.length < 10) {

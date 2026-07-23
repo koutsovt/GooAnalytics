@@ -1,6 +1,39 @@
-import type { BriefData } from "@/lib/types/brief";
+import type { BriefData, PriorReport } from "@/lib/types/brief";
 
-export function buildBriefPrompt(data: BriefData): string {
+// Build the "SINCE LAST MONTH" block from the previous report, with real deltas
+// where both months have the metric. Empty string when there's no prior report
+// (first-ever brief) so the prompt reads cleanly.
+function buildPriorSection(data: BriefData, prior: PriorReport | undefined): string {
+  if (!prior) return "";
+
+  const delta = (label: string, before: number | null, after: number): string => {
+    if (before == null) return `- ${label}: ${after} (no comparable figure last month)`;
+    const diff = after - before;
+    const pct = before !== 0 ? Math.round((diff / before) * 100) : null;
+    const dir = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
+    const pctText = pct != null ? ` (${diff > 0 ? "+" : ""}${pct}%)` : "";
+    return `- ${label}: ${before} → ${after}, ${dir}${pctText}`;
+  };
+
+  const lines = [
+    delta("Website visits", prior.metrics.sessions, data.website.sessions),
+    delta("Search clicks", prior.metrics.searchClicks, data.search.clicks),
+    delta("Average rating", prior.metrics.averageRating, data.reputation.averageRating),
+    delta("Total reviews", prior.metrics.totalReviews, data.reputation.totalReviews),
+  ].join("\n");
+
+  const priorActions = prior.actions.length
+    ? prior.actions.map((a, i) => `  ${i + 1}. ${a}`).join("\n")
+    : "  (none recorded)";
+
+  return `SINCE LAST MONTH (period ${prior.period})
+What we recommended last time:
+${priorActions}
+What moved this period vs last:
+${lines}`;
+}
+
+export function buildBriefPrompt(data: BriefData, prior?: PriorReport): string {
   const websiteSection = data.connections.ga4
     ? `WEBSITE TRAFFIC
 - Sessions: ${data.website.sessions} (${data.website.sessionsDelta > 0 ? "+" : ""}${data.website.sessionsDelta}% vs prior month)
@@ -85,6 +118,8 @@ ${rows || "  - No competitors found"}`;
         })()
       : "";
 
+  const priorSection = buildPriorSection(data, prior);
+
   return `You are a trusted advisor writing a monthly website brief for a small business owner who is NOT technical (think: a hairdresser, a cafe owner). Write the way you would explain it to them across a table — warm, plain-English, owner-to-owner. A vivid everyday comparison is welcome when it makes a point land. Never use jargon without immediately saying what it means in normal words.
 
 Business: ${data.businessName}
@@ -118,6 +153,12 @@ ${
 ${competitorSection}
 `
     : ""
+}${
+  priorSection
+    ? `
+${priorSection}
+`
+    : ""
 }
 HOW TO ANALYSE — think like a growth analyst, not a cheerleader:
 - Prioritise the 3 actions by impact, not by ease. NEVER recommend editing or "optimising" a page that got negligible traffic (a few views) — that is wasted effort. Put the actions where the visitors and the money actually are.
@@ -127,6 +168,7 @@ HOW TO ANALYSE — think like a growth analyst, not a cheerleader:
 - Brand vs non-brand: the business's own name converting well is expected and not an achievement. Real growth comes from winning non-brand local searches ("hairdresser <suburb>", "<service> near me"). Judge those on their own merits.
 - Conversion blind spot: if customer actions (calls, directions, bookings) are NOT MEASURED, you may note ONCE in the summary prose that off-site actions aren't tracked yet. But when website traffic (GA4) IS connected, linking analytics / connecting a data feed / "getting your web person to connect tracking" is BANNED from the actions array entirely — it is not action #1, #2, or #3. Owners cannot self-serve it and the data we already have (website visits, search, reputation) is enough to give three real, owner-doable actions. The ONLY time a measurement-setup step may be an action is when WEBSITE TRAFFIC is NOT CONNECTED (then connecting Google Analytics is allowed as the top action).
 - Treat very large month-on-month changes (≥ ~100%) with caution: they usually mean the prior month was only partially tracked. Frame it as establishing a baseline, not as real growth.
+- CLOSE THE LOOP (only if a SINCE LAST MONTH section is present): open the summary by briefly referencing what you recommended last time and what actually moved — owner-to-owner, e.g. "Last month we said to add a clear booking button and chase a few reviews; here's how it played out." Give honest credit where a metric improved, and where it didn't move, treat it as unfinished rather than a failure (the owner may not have gotten to it, or it needs more time). If a past action clearly worked, say so and consider whether to double down; if a past action clearly did nothing after a fair chance, don't just repeat it — pivot to a different lever. Keep this to a sentence or two; do not turn the whole brief into a retrospective. Never invent a cause-and-effect link you can't support from the numbers.
 - COMPETITOR LANDSCAPE (only if that section is present): use it for positioning, not price warfare. All competitor prices are APPROXIMATE, scraped from their public websites and often incomplete — NEVER claim you are cheaper/pricier than a named rival by an exact amount, and never state a competitor's exact price as fact. Frame it in plain positioning terms ("there are a few salons within a couple of kilometres; on the prices we could see, you sit mid-range" or "you're the priciest nearby but also the best-rated, which is a story worth telling"). The Google "price level" is a rough $–$$$$ band, not a real price. If prices weren't published, say the useful thing is simply that customers can't compare — which is an argument for putting YOUR prices clearly on your own site. At MOST ONE of the 3 actions may be about competitor positioning, and it must still be something the owner can do themselves (e.g. publish/clarify prices, lean into a rating advantage in their listing) — never "undercut competitor X".
 - EXPLAIN RATING DIFFERENCES using review VOLUME, never stars alone. A rival showing 5.0 from 30–50 reviews is a THINNER, less trustworthy signal than the owner's rating from a much larger pile of reviews — a perfect score is easy to hold on few reviews and Google rounds up (a 4.96 shows as 5.0). When a nearby competitor out-stars the owner but on far fewer reviews, say so plainly in the summary in one honest sentence (e.g. "A couple of nearby salons show a perfect 5.0, but that's off 30-odd reviews — your 4.9 from 129 is actually the stronger, more believable signal because it's earned over many more customers"). Do NOT alarm the owner about a higher-rated rival when the owner has far more reviews; frame the owner's review depth as the advantage. Only flag a genuine reputation gap when a rival beats the owner on BOTH rating AND comparable-or-greater review volume.
 - LEARN FROM COMPETITORS: look at what nearby rivals do and, where it's genuinely useful, turn it into ONE concrete improvement the owner can copy themselves — e.g. rivals publish clear price lists (so should you), rivals have far more Google reviews (so make review-asking a habit), rivals post regular offers/photos on their listing (so should you). Keep it owner-doable and specific; never suggest matching a competitor's prices or anything requiring a developer. This may be the competitor-positioning action, but do not force it if the biggest wins lie elsewhere in the data.

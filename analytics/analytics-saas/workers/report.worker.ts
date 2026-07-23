@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { getRedisConnection } from "@/lib/queue/connection";
 import type { ReportGenerationJob } from "@/lib/queue/types";
 import { fetchAnalyticsData } from "@/lib/services/analytics.service";
+import { getPriorReport } from "@/lib/services/report.service";
 
 const connection = getRedisConnection();
 
@@ -47,11 +48,14 @@ export const reportWorker = new Worker<ReportGenerationJob>(
         config.businessType ?? undefined,
       );
 
+      // Loop-closing context from last month, fetched before we insert this one.
+      const prior = await getPriorReport(configId);
+
       job.log(`Generating brief with ${model}...`);
       const brief =
         model === "glm"
-          ? await generateBriefWithGLM(analyticsData)
-          : await generateBrief(analyticsData);
+          ? await generateBriefWithGLM(analyticsData, prior)
+          : await generateBrief(analyticsData, prior);
 
       job.log("Storing report in history...");
       const period = `${periodStart}_to_${periodEnd}`;

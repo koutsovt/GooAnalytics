@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildBriefPrompt } from "@/lib/prompts/brief";
-import type { BriefData, CompetitorData } from "@/lib/types/brief";
+import type { BriefData, CompetitorData, PriorReport } from "@/lib/types/brief";
 
 const competitors: CompetitorData = {
   currency: "GBP",
@@ -126,5 +126,38 @@ describe("buildBriefPrompt competitor section", () => {
     // section is what gates behaviour; assert the section presence differs.
     expect(off).not.toContain("Nearby competitors (nearest first)");
     expect(on).toContain("Nearby competitors (nearest first)");
+  });
+
+  it("omits the SINCE LAST MONTH section when there is no prior report", () => {
+    const prompt = buildBriefPrompt(baseData());
+    // The rule text mentions the section name; the DATA block is keyed by the
+    // "(period ...)" header, which must be absent with no prior report.
+    expect(prompt).not.toContain("SINCE LAST MONTH (period");
+  });
+
+  it("includes prior actions and real deltas when a prior report is supplied", () => {
+    const prior: PriorReport = {
+      period: "2026-04-01_to_2026-04-30",
+      actions: ["Add a clear booking button", "Ask 3 clients for reviews", "Post a photo"],
+      metrics: { sessions: 80, searchClicks: 40, averageRating: 4.9, totalReviews: 100 },
+    };
+    // baseData has sessions 100, search.clicks 50, rating 4.9, reviews 120.
+    const prompt = buildBriefPrompt(baseData(), prior);
+    expect(prompt).toContain("SINCE LAST MONTH (period 2026-04-01_to_2026-04-30)");
+    expect(prompt).toContain("Add a clear booking button");
+    expect(prompt).toContain("Website visits: 80 \u2192 100, up (+25%)");
+    expect(prompt).toContain("Search clicks: 40 \u2192 50, up (+25%)");
+    expect(prompt).toContain("Total reviews: 100 \u2192 120, up (+20%)");
+    expect(prompt).toContain("CLOSE THE LOOP");
+  });
+
+  it("marks a metric with no comparable prior figure instead of inventing a delta", () => {
+    const prior: PriorReport = {
+      period: "2026-04-01_to_2026-04-30",
+      actions: ["Do the thing"],
+      metrics: { sessions: null, searchClicks: 40, averageRating: null, totalReviews: null },
+    };
+    const prompt = buildBriefPrompt(baseData(), prior);
+    expect(prompt).toContain("Website visits: 100 (no comparable figure last month)");
   });
 });

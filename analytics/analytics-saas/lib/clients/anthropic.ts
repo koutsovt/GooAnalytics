@@ -1,14 +1,14 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import { env } from "@/lib/env";
 import { buildBriefPrompt } from "@/lib/prompts/brief";
-import type { BriefData, ReportOutput } from "@/lib/types/brief";
+import type { BriefData, PriorReport, ReportOutput } from "@/lib/types/brief";
 
 const client = new Anthropic({
   apiKey: env.ANTHROPIC_API_KEY,
 });
 
-export async function generateBrief(data: BriefData): Promise<ReportOutput> {
-  const prompt = buildBriefPrompt(data);
+export async function generateBrief(data: BriefData, prior?: PriorReport): Promise<ReportOutput> {
+  const prompt = buildBriefPrompt(data, prior);
 
   const response = await client.messages.create({
     model: "claude-haiku-4-5-20251001",

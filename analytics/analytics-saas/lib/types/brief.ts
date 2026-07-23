@@ -107,3 +107,19 @@ export interface ReportOutput {
   actions: string[];
   subjectLine: string;
 }
+
+// Compact snapshot of the previous month's report, fed back into the next brief
+// so it can close the loop: reference the actions it recommended and report what
+// actually moved. Built server-side from the prior report_history row.
+export interface PriorReport {
+  period: string; // e.g. "2026-05-01_to_2026-05-31"
+  actions: string[]; // the 3 actions we told the owner last time
+  // Headline metrics from last month, for delta framing. Nulls mean the metric
+  // wasn't available then, so no delta should be claimed.
+  metrics: {
+    sessions: number | null;
+    searchClicks: number | null;
+    averageRating: number | null;
+    totalReviews: number | null;
+  };
+}
