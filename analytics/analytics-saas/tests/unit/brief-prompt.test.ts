@@ -160,4 +160,20 @@ describe("buildBriefPrompt competitor section", () => {
     const prompt = buildBriefPrompt(baseData(), prior);
     expect(prompt).toContain("Website visits: 100 (no comparable figure last month)");
   });
+
+  it("never invents a drop when a metric is disconnected THIS period", () => {
+    // Prior had a rating; this period GBP is disconnected (rating is a placeholder
+    // zero). We must say "not measured", never "4.9 → 0, down".
+    const prior: PriorReport = {
+      period: "2026-04-01_to_2026-04-30",
+      actions: ["Chase reviews"],
+      metrics: { sessions: 80, searchClicks: 40, averageRating: 4.9, totalReviews: 120 },
+    };
+    const prompt = buildBriefPrompt(
+      baseData({ connections: { ga4: true, gbp: false, competitors: false } }),
+      prior,
+    );
+    expect(prompt).toContain("Average rating: not measured this period");
+    expect(prompt).not.toContain("4.9 \u2192 0");
+  });
 });

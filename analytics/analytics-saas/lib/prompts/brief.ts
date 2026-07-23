@@ -6,7 +6,11 @@ import type { BriefData, PriorReport } from "@/lib/types/brief";
 function buildPriorSection(data: BriefData, prior: PriorReport | undefined): string {
   if (!prior) return "";
 
-  const delta = (label: string, before: number | null, after: number): string => {
+  // `after` is nullable: when a data source isn't connected THIS period its value
+  // is a placeholder zero, not a real measurement, so we must not compute a delta
+  // off it (that would invent a scary "4.9 → 0" drop).
+  const delta = (label: string, before: number | null, after: number | null): string => {
+    if (after == null) return `- ${label}: not measured this period`;
     if (before == null) return `- ${label}: ${after} (no comparable figure last month)`;
     const diff = after - before;
     const pct = before !== 0 ? Math.round((diff / before) * 100) : null;
@@ -16,10 +20,18 @@ function buildPriorSection(data: BriefData, prior: PriorReport | undefined): str
   };
 
   const lines = [
-    delta("Website visits", prior.metrics.sessions, data.website.sessions),
+    delta("Website visits", prior.metrics.sessions, data.connections.ga4 ? data.website.sessions : null),
     delta("Search clicks", prior.metrics.searchClicks, data.search.clicks),
-    delta("Average rating", prior.metrics.averageRating, data.reputation.averageRating),
-    delta("Total reviews", prior.metrics.totalReviews, data.reputation.totalReviews),
+    delta(
+      "Average rating",
+      prior.metrics.averageRating,
+      data.connections.gbp ? data.reputation.averageRating : null,
+    ),
+    delta(
+      "Total reviews",
+      prior.metrics.totalReviews,
+      data.connections.gbp ? data.reputation.totalReviews : null,
+    ),
   ].join("\n");
 
   const priorActions = prior.actions.length
