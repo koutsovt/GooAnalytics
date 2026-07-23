@@ -109,7 +109,21 @@ export async function generateBriefWithGLM(data: BriefData): Promise<ReportOutpu
     );
   }
 
-  if (!parsed.summary || !parsed.actions || !parsed.subjectLine) {
+  // GLM occasionally splits the summary across summary/summary2/summary3 instead
+  // of one string. Coalesce those back together rather than failing the whole
+  // report (competitor discovery + all data have already succeeded by now).
+  if (typeof parsed.summary === "string") {
+    const extraParas = Object.keys(parsed)
+      .filter((k) => /^summary\d+$/.test(k))
+      .sort()
+      .map((k) => parsed[k])
+      .filter((v): v is string => typeof v === "string" && v.trim().length > 0);
+    if (extraParas.length > 0) {
+      parsed.summary = [parsed.summary, ...extraParas].join("\n\n");
+    }
+  }
+
+  if (!parsed.summary || !parsed.actions) {
     // Surface which keys came back so a recurrence is diagnosable from
     // report_history.errorMessage instead of a blind "invalid structure".
     const keys = Object.keys(parsed).join(", ") || "(none)";
@@ -120,9 +134,16 @@ export async function generateBriefWithGLM(data: BriefData): Promise<ReportOutpu
     throw new Error("Expected exactly 3 actions from GLM");
   }
 
+  // A missing subjectLine shouldn't sink an otherwise-complete report; fall back
+  // to a plain, generic line instead.
+  const subjectLine =
+    typeof parsed.subjectLine === "string" && parsed.subjectLine.trim()
+      ? parsed.subjectLine
+      : "Your monthly website brief";
+
   return {
     summary: parsed.summary,
     actions: parsed.actions,
-    subjectLine: parsed.subjectLine,
+    subjectLine,
   };
 }

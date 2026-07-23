@@ -124,10 +124,12 @@ RULES — follow strictly:
 - Search Console clicks while WEBSITE TRAFFIC is NOT CONNECTED is EXPECTED — the visits are simply unmeasured, not zero. Do not frame it as a discrepancy, disconnect, or technical issue.
 - If website analytics is not connected, the most useful action is to connect Google Analytics so traffic can be measured.
 
-Write a 3-paragraph plain-English summary for the owner (warm, concrete, no jargon), then exactly 3 actions written as described above, ordered most-valuable first. When a COMPETITOR LANDSCAPE section is present, work its story into the summary prose: where the owner stands among nearby rivals, and — if the ratings differ — one honest sentence explaining WHY (review volume, not stars alone, per the rule above). Output ONLY valid JSON with no markdown fences:
+Write a plain-English summary for the owner (warm, concrete, no jargon) of about 3 short paragraphs, then exactly 3 actions written as described above, ordered most-valuable first. When a COMPETITOR LANDSCAPE section is present, work its story into the summary prose: where the owner stands among nearby rivals, and — if the ratings differ — one honest sentence explaining WHY (review volume, not stars alone, per the rule above).
+
+Output ONLY valid JSON with no markdown fences, and use EXACTLY these three keys and no others — "summary", "actions", "subjectLine". The entire summary (all paragraphs) goes into the single "summary" string, separated by blank lines (\n\n). Do NOT split it into "summary2", "summary3", or any extra keys. "actions" must be an array of exactly 3 strings.
 
 {
-  "summary": "3 short paragraphs, owner-to-owner: what happened this month, what's working, and the one thing holding growth back",
+  "summary": "All 3 short paragraphs as ONE string, owner-to-owner, separated by \n\n: what happened this month, what's working, and the one thing holding growth back",
   "actions": ["Most valuable action — meaning, then the specific thing to do, then effort/payoff", "Second action, same structure", "Third action, same structure"],
   "subjectLine": "A plain, specific subject line — name the headline result, not generic praise"
 }`;
