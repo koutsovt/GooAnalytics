@@ -92,10 +92,11 @@ export async function GET(request: Request) {
       }
 
       const { periodStart, periodEnd } = computeReportWindow(config.scheduleFrequency, now);
+      const period = `${periodStart}_to_${periodEnd}`;
 
       try {
         await reportQueue.add(
-          `cron-${config.id}-${Date.now()}`,
+          `cron-${config.id}-${period}`,
           {
             userId: config.userId,
             configId: config.id,

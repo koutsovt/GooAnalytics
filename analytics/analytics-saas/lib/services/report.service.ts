@@ -1,8 +1,9 @@
 import { and, desc, eq } from "drizzle-orm";
 import { getValidTokens } from "@/lib/auth/google-oauth";
 import { generateBrief } from "@/lib/clients/anthropic";
-import { db } from "@/lib/db";
+import { db, isUniqueConstraintViolation } from "@/lib/db";
 import { reportConfigs, reportHistory } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import { fetchAnalyticsData } from "@/lib/services/analytics.service";
 import type { PriorReport, ReportOutput } from "@/lib/types/brief";
 
@@ -75,16 +76,29 @@ export async function generateReport(
 
   const period = `${periodStart}_to_${periodEnd}`;
 
-  await db.insert(reportHistory).values({
-    id: `rpt_${userId}_${Date.now()}`,
-    userId,
-    configId,
-    period,
-    status: "success",
-    reportData: brief,
-    rawData: analyticsData,
-    createdAt: new Date(),
-  });
+  try {
+    await db.insert(reportHistory).values({
+      id: `rpt_${userId}_${Date.now()}`,
+      userId,
+      configId,
+      period,
+      status: "success",
+      reportData: brief,
+      rawData: analyticsData,
+      createdAt: new Date(),
+    });
+  } catch (insertError) {
+    // Same config+period report already exists (unique index on
+    // report_history) — a duplicate/overlapping trigger, not a real failure.
+    if (isUniqueConstraintViolation(insertError)) {
+      logger.warn("Report already exists for this config and period, skipping insert", {
+        configId,
+        period,
+      });
+    } else {
+      throw insertError;
+    }
+  }
 
   return brief;
 }

@@ -103,6 +103,10 @@ export const reportHistory = pgTable(
   (table) => ({
     userIdIdx: index("report_history_user_id_idx").on(table.userId),
     configIdIdx: index("report_history_config_id_idx").on(table.configId),
+    configPeriodIdx: uniqueIndex("report_history_config_period_idx").on(
+      table.configId,
+      table.period,
+    ),
   }),
 );
 

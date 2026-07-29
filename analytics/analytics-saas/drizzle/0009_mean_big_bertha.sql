@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "report_history_config_period_idx" ON "report_history" USING btree ("config_id","period");

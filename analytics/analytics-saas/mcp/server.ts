@@ -141,8 +141,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return { content: [{ type: "text", text: "Config not found" }] };
     }
 
+    const period = `${periodStart}_to_${periodEnd}`;
+
     const job = await reportQueue.add(
-      `mcp-${configId}-${Date.now()}`,
+      `mcp-${configId}-${period}`,
       {
         userId: config.userId,
         configId,

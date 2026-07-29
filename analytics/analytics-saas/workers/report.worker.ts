@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { getValidTokens } from "@/lib/auth/google-oauth";
 import { generateBrief } from "@/lib/clients/anthropic";
 import { generateBriefWithGLM } from "@/lib/clients/glm";
-import { db } from "@/lib/db";
+import { db, isUniqueConstraintViolation } from "@/lib/db";
 import { reportConfigs, reportHistory } from "@/lib/db/schema";
 import { logger } from "@/lib/logger";
 import { getRedisConnection } from "@/lib/queue/connection";
@@ -64,16 +64,31 @@ export const reportWorker = new Worker<ReportGenerationJob>(
 
       logger.debug("Saving report to history", { reportId });
 
-      await db.insert(reportHistory).values({
-        id: reportId,
-        userId,
-        configId,
-        period,
-        status: "success",
-        reportData: brief,
-        rawData: analyticsData,
-        createdAt: new Date(),
-      });
+      try {
+        await db.insert(reportHistory).values({
+          id: reportId,
+          userId,
+          configId,
+          period,
+          status: "success",
+          reportData: brief,
+          rawData: analyticsData,
+          createdAt: new Date(),
+        });
+      } catch (insertError) {
+        // Two overlapping/duplicate job triggers for the same config+period
+        // race to insert; the unique (configId, period) index rejects the
+        // loser. That's not a failure — the report already exists — so log
+        // and move on instead of failing the whole job.
+        if (isUniqueConstraintViolation(insertError)) {
+          logger.warn("Report already exists for this config and period, skipping", {
+            configId,
+            period,
+          });
+          return { reportId, status: "skipped-duplicate" };
+        }
+        throw insertError;
+      }
 
       logger.info("Report saved", { reportId });
 
@@ -92,15 +107,26 @@ export const reportWorker = new Worker<ReportGenerationJob>(
       const isFinalAttempt = job.attemptsMade + 1 >= maxAttempts;
 
       if (isFinalAttempt) {
-        await db.insert(reportHistory).values({
-          id: `rpt_${userId}_${Date.now()}`,
-          userId,
-          configId,
-          period: `${periodStart}_to_${periodEnd}`,
-          status: "error",
-          errorMessage: message,
-          createdAt: new Date(),
-        });
+        try {
+          await db.insert(reportHistory).values({
+            id: `rpt_${userId}_${Date.now()}`,
+            userId,
+            configId,
+            period: `${periodStart}_to_${periodEnd}`,
+            status: "error",
+            errorMessage: message,
+            createdAt: new Date(),
+          });
+        } catch (insertError) {
+          if (isUniqueConstraintViolation(insertError)) {
+            logger.warn("Report history row already exists for this config and period, skipping", {
+              configId,
+              period: `${periodStart}_to_${periodEnd}`,
+            });
+          } else {
+            throw insertError;
+          }
+        }
       }
 
       throw error;
