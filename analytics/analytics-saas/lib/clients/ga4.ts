@@ -4,6 +4,33 @@ import type { GoogleTokens } from "@/lib/auth/google-oauth";
 import { buildAuthClient } from "@/lib/auth/google-oauth";
 import type { LocalData, WebsiteData } from "@/lib/types/brief";
 
+// Derives an equal-length prior-period window immediately preceding
+// `periodStart`. `periodLength` is the number of days between `periodStart`
+// and `periodEnd` inclusive, so a 15-day current period (e.g. 1-15 July) is
+// compared against the 15 days before it (16-30 June), not the previous
+// calendar month. Dates are `YYYY-MM-DD` strings; `Date` parses those as UTC
+// midnight, and we only ever add/subtract whole days via the UTC setters, so
+// this stays timezone/DST-safe.
+export function computePriorPeriod(
+  periodStart: string,
+  periodEnd: string,
+): { priorStart: string; priorEnd: string } {
+  const start = new Date(periodStart);
+  const end = new Date(periodEnd);
+  const periodLengthDays =
+    Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+
+  const priorEnd = new Date(start);
+  priorEnd.setUTCDate(priorEnd.getUTCDate() - 1);
+  const priorStart = new Date(priorEnd);
+  priorStart.setUTCDate(priorStart.getUTCDate() - (periodLengthDays - 1));
+
+  return {
+    priorStart: priorStart.toISOString().slice(0, 10),
+    priorEnd: priorEnd.toISOString().slice(0, 10),
+  };
+}
+
 export async function fetchGA4Data(
   propertyId: string,
   tokens: GoogleTokens,
@@ -16,13 +43,10 @@ export async function fetchGA4Data(
     authClient: authClient as any,
   });
 
-  const start = new Date(periodStart);
-  const priorEnd = new Date(start);
-  priorEnd.setDate(priorEnd.getDate() - 1);
-  const priorStart = new Date(priorEnd);
-  priorStart.setDate(1);
-  const priorStartStr = priorStart.toISOString().slice(0, 10);
-  const priorEndStr = priorEnd.toISOString().slice(0, 10);
+  const { priorStart: priorStartStr, priorEnd: priorEndStr } = computePriorPeriod(
+    periodStart,
+    periodEnd,
+  );
 
   const prop = `properties/${propertyId}`;
   const curr = { startDate: periodStart, endDate: periodEnd };
