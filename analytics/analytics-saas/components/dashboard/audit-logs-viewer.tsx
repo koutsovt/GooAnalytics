@@ -23,24 +23,27 @@ export function AuditLogsViewer({ onLoad }: AuditLogsViewerProps) {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
+  // Fetch is re-triggered by `page` changing (buttons below only update
+  // `page`); the fetch function lives inside the effect so React can see it
+  // synchronizes with the `page`/`onLoad` props rather than being an
+  // externally-callable action.
   useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/team/audit-logs?page=${page}&limit=20`);
+        if (!res.ok) throw new Error("Failed to load audit logs");
+        const data = await res.json();
+        setLogs(data.items);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load logs");
+      } finally {
+        setLoading(false);
+      }
+    };
     loadLogs();
     onLoad?.();
-  }, [onLoad]);
-
-  const loadLogs = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/team/audit-logs?page=${page}&limit=20`);
-      if (!res.ok) throw new Error("Failed to load audit logs");
-      const data = await res.json();
-      setLogs(data.items);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load logs");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [page, onLoad]);
 
   const getActionLabel = (action: string): string => {
     const labels: Record<string, string> = {
@@ -96,10 +99,8 @@ export function AuditLogsViewer({ onLoad }: AuditLogsViewerProps) {
       </table>
       <div className="mt-4 flex gap-2">
         <button
-          onClick={() => {
-            setPage(Math.max(1, page - 1));
-            loadLogs();
-          }}
+          type="button"
+          onClick={() => setPage(Math.max(1, page - 1))}
           disabled={page === 1}
           className="px-3 py-1 rounded bg-brand text-white text-sm disabled:opacity-50"
         >
@@ -107,10 +108,8 @@ export function AuditLogsViewer({ onLoad }: AuditLogsViewerProps) {
         </button>
         <span className="text-sm text-muted-foreground">Page {page}</span>
         <button
-          onClick={() => {
-            setPage(page + 1);
-            loadLogs();
-          }}
+          type="button"
+          onClick={() => setPage(page + 1)}
           className="px-3 py-1 rounded bg-brand text-white text-sm"
         >
           Next

@@ -5,11 +5,11 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  ReferenceLine,
 } from "recharts";
 
 interface SessionsChartProps {
@@ -28,12 +28,10 @@ const CustomTooltip = ({
   active?: boolean;
   payload?: Array<{ value: number; name: string }>;
 }) => {
-  if (active && payload && payload.length) {
+  if (active && payload?.length) {
     return (
       <div className="rounded-lg bg-card border border-border shadow-lg p-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase">
-          {payload[0].name}
-        </p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase">{payload[0].name}</p>
         <p className="text-lg font-bold text-brand mt-1">
           {payload[0].value?.toLocaleString() ?? 0}
         </p>
@@ -55,21 +53,20 @@ export function SessionsChart({
 
   const avgSessions =
     chartData.length > 0
-      ? Math.round(
-          chartData.reduce((sum, d) => sum + (d.Sessions ?? 0), 0) / chartData.length
-        )
+      ? Math.round(chartData.reduce((sum, d) => sum + (d.Sessions ?? 0), 0) / chartData.length)
       : 0;
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 md:p-6 hover:border-brand/30 transition-colors">
       <div className="mb-4 md:mb-6">
         <h3 className="text-base md:text-lg font-semibold text-foreground">{title}</h3>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
-        )}
+        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
         {avgSessions > 0 && (
           <p className="text-xs text-muted-foreground mt-2">
-            Average: <span className="font-semibold text-foreground">{avgSessions.toLocaleString()} sessions</span>
+            Average:{" "}
+            <span className="font-semibold text-foreground">
+              {avgSessions.toLocaleString()} sessions
+            </span>
           </p>
         )}
       </div>

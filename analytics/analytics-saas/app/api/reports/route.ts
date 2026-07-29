@@ -1,10 +1,10 @@
-import { logger } from "@/lib/logger";
 import { and, eq, inArray } from "drizzle-orm";
 import { canEditConfig } from "@/lib/auth/permissions";
 import { resolveOwner } from "@/lib/auth/resolve-owner";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { reportHistory } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 
 export async function DELETE(req: Request) {
   try {

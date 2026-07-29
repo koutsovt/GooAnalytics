@@ -36,7 +36,7 @@ async function sendInvitationEmail(email: string, acceptUrl: string) {
   }
 }
 
-export async function POST(req: Request, { params }: { params: Promise<{ invId: string }> }) {
+export async function POST(_req: Request, { params }: { params: Promise<{ invId: string }> }) {
   try {
     const userId = await requireSession();
     const { invId } = await params;

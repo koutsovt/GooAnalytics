@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
 
   const publicRoutes = ["/login", "/api/auth", "/"];
   const isPublic = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(route + "/"),
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
   if (isPublic && pathname === "/") {
@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const protectedPaths = ["/dashboard", "/reports", "/properties", "/settings"];
-  const isProtected = protectedPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  const isProtected = protectedPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   if (!isProtected) {
     return NextResponse.next();

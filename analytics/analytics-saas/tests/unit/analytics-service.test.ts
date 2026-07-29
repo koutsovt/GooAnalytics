@@ -8,19 +8,34 @@ import { fetchAnalyticsData } from "@/lib/services/analytics.service";
 vi.mock("@/lib/clients/ga4", () => ({
   fetchGA4Data: vi.fn().mockResolvedValue({
     website: { sessions: 0, sessionsDelta: 0, topPages: [], trafficSources: [], engagementRate: 0 },
-    local: { calls: 0, directions: 0, websiteClicks: 0, bookings: 0, totalInteractions: 0, interactionsDelta: 0 },
+    local: {
+      calls: 0,
+      directions: 0,
+      websiteClicks: 0,
+      bookings: 0,
+      totalInteractions: 0,
+      interactionsDelta: 0,
+    },
   }),
 }));
 vi.mock("@/lib/clients/gsc", () => ({
   fetchGSCData: vi.fn().mockResolvedValue({
-    impressions: 0, clicks: 0, ctr: 0, avgPosition: 0, topQueries: [],
+    impressions: 0,
+    clicks: 0,
+    ctr: 0,
+    avgPosition: 0,
+    topQueries: [],
   }),
 }));
 vi.mock("@/lib/clients/gbp", () => ({ fetchReputationData: vi.fn() }));
 vi.mock("@/lib/clients/places", () => ({ fetchPlacesReputation: vi.fn() }));
 
 const envMock = { GOOGLE_MAPS_API_KEY: "test-key" };
-vi.mock("@/lib/env", () => ({ get env() { return envMock; } }));
+vi.mock("@/lib/env", () => ({
+  get env() {
+    return envMock;
+  },
+}));
 
 const tokens = { accessToken: "a", refreshToken: "r", expiryDate: Date.now() + 3600_000 };
 const SITE = "https://terencelondon.com.au/";
@@ -49,7 +64,13 @@ describe("fetchAnalyticsData reputation resolution", () => {
     vi.mocked(fetchReputationData).mockResolvedValue(ownerRep);
 
     const data = await fetchAnalyticsData(
-      "terencelondon.com.au", undefined, SITE, "accounts/1/locations/2", tokens, START, END,
+      "terencelondon.com.au",
+      undefined,
+      SITE,
+      "accounts/1/locations/2",
+      tokens,
+      START,
+      END,
     );
 
     expect(fetchReputationData).toHaveBeenCalledOnce();
@@ -62,7 +83,13 @@ describe("fetchAnalyticsData reputation resolution", () => {
     vi.mocked(fetchPlacesReputation).mockResolvedValue(placesRep);
 
     const data = await fetchAnalyticsData(
-      "terencelondon.com.au", undefined, SITE, undefined, tokens, START, END,
+      "terencelondon.com.au",
+      undefined,
+      SITE,
+      undefined,
+      tokens,
+      START,
+      END,
     );
 
     expect(fetchReputationData).not.toHaveBeenCalled();
@@ -85,12 +112,21 @@ describe("fetchAnalyticsData reputation resolution", () => {
     });
 
     const data = await fetchAnalyticsData(
-      "terencelondon.com.au", undefined, SITE, undefined, tokens, START, END,
+      "terencelondon.com.au",
+      undefined,
+      SITE,
+      undefined,
+      tokens,
+      START,
+      END,
     );
 
     expect(data.connections.gbp).toBe(false);
     expect(data.reputation).toEqual({
-      averageRating: 0, totalReviews: 0, newReviewsThisMonth: 0, newReviews: [],
+      averageRating: 0,
+      totalReviews: 0,
+      newReviewsThisMonth: 0,
+      newReviews: [],
     });
   });
 
@@ -101,7 +137,13 @@ describe("fetchAnalyticsData reputation resolution", () => {
     });
 
     const data = await fetchAnalyticsData(
-      "terencelondon.com.au", undefined, SITE, undefined, tokens, START, END,
+      "terencelondon.com.au",
+      undefined,
+      SITE,
+      undefined,
+      tokens,
+      START,
+      END,
     );
 
     expect(data.connections.gbp).toBe(true);
@@ -112,7 +154,13 @@ describe("fetchAnalyticsData reputation resolution", () => {
     envMock.GOOGLE_MAPS_API_KEY = "";
 
     const data = await fetchAnalyticsData(
-      "terencelondon.com.au", undefined, SITE, undefined, tokens, START, END,
+      "terencelondon.com.au",
+      undefined,
+      SITE,
+      undefined,
+      tokens,
+      START,
+      END,
     );
 
     expect(fetchPlacesReputation).not.toHaveBeenCalled();
@@ -124,7 +172,13 @@ describe("fetchAnalyticsData reputation resolution", () => {
     vi.mocked(fetchPlacesReputation).mockRejectedValue(new Error("403 PERMISSION_DENIED"));
 
     const data = await fetchAnalyticsData(
-      "terencelondon.com.au", undefined, SITE, undefined, tokens, START, END,
+      "terencelondon.com.au",
+      undefined,
+      SITE,
+      undefined,
+      tokens,
+      START,
+      END,
     );
 
     expect(data.connections.gbp).toBe(false);

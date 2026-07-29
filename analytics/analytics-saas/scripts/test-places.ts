@@ -6,8 +6,9 @@
  * Defaults to Terence Salon (terencelondon.com.au). Requires GOOGLE_MAPS_API_KEY
  * in .env.local (a self-service Maps key with the Places API enabled).
  */
+
+import { resolve } from "node:path";
 import { config as loadEnv } from "dotenv";
-import { resolve } from "path";
 
 loadEnv({ path: resolve(".env.local") });
 

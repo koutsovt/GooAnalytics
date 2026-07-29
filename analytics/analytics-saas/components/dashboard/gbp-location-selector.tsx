@@ -63,9 +63,7 @@ export function GBPLocationSelector({ value, onChange }: GBPLocationSelectorProp
     return (
       <div
         className={`rounded-lg border p-4 flex gap-3 ${
-          isExpected
-            ? "bg-muted/40 border-border"
-            : "bg-red-50 border-red-200"
+          isExpected ? "bg-muted/40 border-border" : "bg-red-50 border-red-200"
         }`}
       >
         <Info
@@ -74,20 +72,12 @@ export function GBPLocationSelector({ value, onChange }: GBPLocationSelectorProp
           }`}
         />
         <div>
-          <p
-            className={`font-medium ${
-              isExpected ? "text-foreground" : "text-red-800"
-            }`}
-          >
+          <p className={`font-medium ${isExpected ? "text-foreground" : "text-red-800"}`}>
             {isExpected
               ? "Automatic location lookup isn't available yet"
               : "Unable to load locations"}
           </p>
-          <p
-            className={`text-sm ${
-              isExpected ? "text-muted-foreground" : "text-red-700"
-            }`}
-          >
+          <p className={`text-sm ${isExpected ? "text-muted-foreground" : "text-red-700"}`}>
             {isExpected
               ? "This needs Google Business Profile API access approved for this app. Until then, enter your location resource name manually below."
               : error}
@@ -128,7 +118,12 @@ export function GBPLocationSelector({ value, onChange }: GBPLocationSelectorProp
               }`}
             >
               {value === location.locationId && (
-                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-3 h-3 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
                   <path
                     fillRule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"

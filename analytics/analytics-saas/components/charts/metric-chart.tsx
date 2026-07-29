@@ -5,11 +5,11 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  ReferenceLine,
 } from "recharts";
 
 interface MetricChartProps {
@@ -31,12 +31,10 @@ const CustomTooltip = ({
   payload?: Array<{ value: number; name: string }>;
   label?: string;
 }) => {
-  if (active && payload && payload.length) {
+  if (active && payload?.length) {
     return (
       <div className="rounded-lg bg-card border border-border shadow-lg p-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase">
-          {label}
-        </p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase">{label}</p>
         <p className="text-lg font-bold text-brand mt-1">
           {typeof payload[0].value === "number"
             ? payload[0].value >= 1000
@@ -68,16 +66,16 @@ export function MetricChart({
     .map((d) => d[metricLabel || metricKey])
     .filter((v) => typeof v === "number");
   const average =
-    values.length > 0 ? Math.round(values.reduce((a, b) => a + (b as number), 0) / values.length) : 0;
+    values.length > 0
+      ? Math.round(values.reduce((a, b) => a + (b as number), 0) / values.length)
+      : 0;
   const max = values.length > 0 ? Math.max(...(values as number[])) : 0;
 
   return (
     <div className="rounded-lg border border-border bg-card p-6 hover:border-brand/30 transition-colors">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-        {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
-        )}
+        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
         <div className="flex gap-6 mt-3">
           {average > 0 && (
             <div>

@@ -39,8 +39,9 @@ export async function fetchGA4Data(
 ): Promise<{ website: WebsiteData; local: LocalData }> {
   const authClient = buildAuthClient(tokens);
 
+  type GA4ClientOptions = NonNullable<ConstructorParameters<typeof BetaAnalyticsDataClient>[0]>;
   const client = new BetaAnalyticsDataClient({
-    authClient: authClient as any,
+    authClient: authClient as unknown as GA4ClientOptions["authClient"],
   });
 
   const { priorStart: priorStartStr, priorEnd: priorEndStr } = computePriorPeriod(
@@ -139,19 +140,22 @@ export async function fetchGA4Data(
   const gbpRows = gbpResults?.[0][0]?.rows ?? [];
   const priorGbpRows = gbpResults?.[1][0]?.rows ?? [];
 
-  const sessions = parseInt(sessionsRes[0]?.rows?.[0]?.metricValues?.[0]?.value ?? "0");
-  const priorSessions = parseInt(priorSessionsRes[0]?.rows?.[0]?.metricValues?.[0]?.value ?? "0");
+  const sessions = parseInt(sessionsRes[0]?.rows?.[0]?.metricValues?.[0]?.value ?? "0", 10);
+  const priorSessions = parseInt(
+    priorSessionsRes[0]?.rows?.[0]?.metricValues?.[0]?.value ?? "0",
+    10,
+  );
   const sessionsDelta =
     priorSessions > 0 ? Math.round(((sessions - priorSessions) / priorSessions) * 1000) / 10 : 0;
 
   const topPages = (topPagesRes[0]?.rows ?? []).map((r) => ({
     path: r.dimensionValues?.[0]?.value ?? "",
-    views: parseInt(r.metricValues?.[0]?.value ?? "0"),
+    views: parseInt(r.metricValues?.[0]?.value ?? "0", 10),
   }));
 
   const trafficSources = (trafficSourceRes[0]?.rows ?? []).map((r) => ({
     source: r.dimensionValues?.[0]?.value ?? "Unknown",
-    sessions: parseInt(r.metricValues?.[0]?.value ?? "0"),
+    sessions: parseInt(r.metricValues?.[0]?.value ?? "0", 10),
   }));
 
   const engagementRate = parseFloat(engagementRes[0]?.rows?.[0]?.metricValues?.[0]?.value ?? "0");
@@ -160,27 +164,30 @@ export async function fetchGA4Data(
 
   const dailySessions = (dailyRes[0]?.rows ?? []).map((r) => ({
     date: r.dimensionValues?.[0]?.value ?? "",
-    sessions: parseInt(r.metricValues?.[0]?.value ?? "0"),
+    sessions: parseInt(r.metricValues?.[0]?.value ?? "0", 10),
   }));
 
   const devices = (deviceRes[0]?.rows ?? []).map((r) => ({
     device: r.dimensionValues?.[0]?.value ?? "unknown",
-    sessions: parseInt(r.metricValues?.[0]?.value ?? "0"),
+    sessions: parseInt(r.metricValues?.[0]?.value ?? "0", 10),
   }));
 
   const gbpMap: Record<string, number> = {};
   for (const row of gbpRows) {
-    gbpMap[row.dimensionValues?.[0]?.value ?? ""] = parseInt(row.metricValues?.[0]?.value ?? "0");
+    gbpMap[row.dimensionValues?.[0]?.value ?? ""] = parseInt(
+      row.metricValues?.[0]?.value ?? "0",
+      10,
+    );
   }
 
-  const calls = gbpMap["CALL"] ?? 0;
-  const directions = gbpMap["DRIVING_DIRECTIONS"] ?? 0;
-  const websiteClicks = gbpMap["WEBSITE"] ?? 0;
-  const bookings = gbpMap["BOOKING"] ?? 0;
+  const calls = gbpMap.CALL ?? 0;
+  const directions = gbpMap.DRIVING_DIRECTIONS ?? 0;
+  const websiteClicks = gbpMap.WEBSITE ?? 0;
+  const bookings = gbpMap.BOOKING ?? 0;
   const totalInteractions = calls + directions + websiteClicks + bookings;
 
   const priorTotal = priorGbpRows.reduce(
-    (sum, r) => sum + parseInt(r.metricValues?.[0]?.value ?? "0"),
+    (sum, r) => sum + parseInt(r.metricValues?.[0]?.value ?? "0", 10),
     0,
   );
   const interactionsDelta =

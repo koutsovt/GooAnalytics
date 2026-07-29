@@ -78,7 +78,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (name === "get_latest_report") {
     const configId = (args?.config_id as string) || undefined;
 
-    let report;
+    let report: Awaited<ReturnType<typeof db.query.reportHistory.findFirst>>;
     if (configId) {
       report = await db.query.reportHistory.findFirst({
         where: eq(reportHistory.configId, configId),
@@ -179,7 +179,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (name === "get_analytics_overview") {
     const configId = (args?.config_id as string) || undefined;
 
-    let report;
+    let report: Awaited<ReturnType<typeof db.query.reportHistory.findFirst>>;
     if (configId) {
       report = await db.query.reportHistory.findFirst({
         where: eq(reportHistory.configId, configId),
@@ -197,7 +197,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     }
 
-    if (!report || !report.rawData) {
+    if (!report?.rawData) {
       return { content: [{ type: "text", text: "No data available" }] };
     }
 

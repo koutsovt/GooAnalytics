@@ -1,4 +1,4 @@
-import { and, eq, isNull, lt } from "drizzle-orm";
+import { and, isNull, lt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { teamInvitations } from "@/lib/db/schema";
 import { env } from "@/lib/env";

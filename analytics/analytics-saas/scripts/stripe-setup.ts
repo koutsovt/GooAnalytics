@@ -8,8 +8,9 @@
  * a matching active monthly price instead of creating duplicates. Requires a real
  * STRIPE_SECRET_KEY (sk_test_… in test mode) in .env.local.
  */
+
+import { resolve } from "node:path";
 import { config as loadEnv } from "dotenv";
-import { resolve } from "path";
 
 loadEnv({ path: resolve(".env.local") });
 
@@ -42,9 +43,7 @@ async function findOrCreatePrice(productId: string, amountCents: number) {
   const prices = await stripe.prices.list({ product: productId, active: true, limit: 100 });
   const match = prices.data.find(
     (p) =>
-      p.unit_amount === amountCents &&
-      p.currency === CURRENCY &&
-      p.recurring?.interval === "month",
+      p.unit_amount === amountCents && p.currency === CURRENCY && p.recurring?.interval === "month",
   );
   if (match) {
     console.log(`  price exists: ${match.id}`);

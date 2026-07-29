@@ -1,6 +1,5 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
-import { canManageTeam } from "@/lib/auth/permissions";
 import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { teamInvitations, teamMembers } from "@/lib/db/schema";

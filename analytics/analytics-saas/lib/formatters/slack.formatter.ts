@@ -18,7 +18,9 @@ export class SlackFormatter implements ChannelFormatter {
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*💡 Recommended Actions*\n` + (actions ? actions.map((a, i) => `${i + 1}. ${a}`).join("\n") : ""),
+          text:
+            `*💡 Recommended Actions*\n` +
+            (actions ? actions.map((a, i) => `${i + 1}. ${a}`).join("\n") : ""),
         },
       },
     ];

@@ -1,7 +1,7 @@
+import { resolve } from "node:path";
 import { config } from "dotenv";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { resolve } from "path";
 import pkg from "pg";
 
 const { Pool } = pkg;

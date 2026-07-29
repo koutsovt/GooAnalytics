@@ -23,15 +23,14 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
     config?.recipientEmail ?? defaultEmail ?? "",
   );
   const [recipientPhone, setRecipientPhone] = useState(config?.recipientPhone ?? "");
-  const [scheduleFrequency, setScheduleFrequency] = useState(
-    config?.scheduleFrequency ?? "monthly",
-  );
-  const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState(config?.scheduleDayOfMonth ?? 1);
-  const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState(config?.scheduleDayOfWeek ?? 1);
-  const [scheduleTime, setScheduleTime] = useState(config?.scheduleTime ?? "09:00");
-  const [scheduleTimezone, setScheduleTimezone] = useState(
-    config?.scheduleTimezone ?? "Australia/Sydney",
-  );
+  // These schedule fields have no editable control in this form yet (the UI
+  // only exposes property/recipient fields below); kept as fixed values pulled
+  // from the existing config so an edit doesn't silently reset the schedule.
+  const scheduleFrequency = config?.scheduleFrequency ?? "monthly";
+  const scheduleDayOfMonth = config?.scheduleDayOfMonth ?? 1;
+  const scheduleDayOfWeek = config?.scheduleDayOfWeek ?? 1;
+  const scheduleTime = config?.scheduleTime ?? "09:00";
+  const scheduleTimezone = config?.scheduleTimezone ?? "Australia/Sydney";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,13 +77,14 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1">
+        <label htmlFor="gscSiteUrl" className="block text-sm font-medium text-foreground mb-1">
           Website URL *
         </label>
         <p className="text-xs text-muted-foreground mb-2">
           Your website domain (required for search data and analytics)
         </p>
         <input
+          id="gscSiteUrl"
           type="text"
           value={gscSiteUrl}
           onChange={(e) => setGscSiteUrl(e.target.value)}
@@ -95,13 +95,12 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1">
+        <label htmlFor="recipientEmail" className="block text-sm font-medium text-foreground mb-1">
           Recipient Email *
         </label>
-        <p className="text-xs text-muted-foreground mb-2">
-          Where to send your analytics reports
-        </p>
+        <p className="text-xs text-muted-foreground mb-2">Where to send your analytics reports</p>
         <input
+          id="recipientEmail"
           type="email"
           value={recipientEmail}
           onChange={(e) => setRecipientEmail(e.target.value)}
@@ -112,14 +111,10 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
       </div>
 
       <div className="pt-4 border-t border-border">
-        <h3 className="text-sm font-semibold text-foreground mb-4">
-          Data Sources (Optional)
-        </h3>
+        <h3 className="text-sm font-semibold text-foreground mb-4">Data Sources (Optional)</h3>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-foreground mb-1">
-            GA4 Property
-          </label>
+          <span className="block text-sm font-medium text-foreground mb-1">GA4 Property</span>
           <p className="text-xs text-muted-foreground mb-3">
             Select your Google Analytics 4 property to pull visitor and event data
           </p>
@@ -127,7 +122,7 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
+          <label htmlFor="gbpLocationId" className="block text-sm font-medium text-foreground mb-1">
             Google Business Profile Location
           </label>
           <p className="text-xs text-muted-foreground mb-3">
@@ -136,6 +131,7 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
           </p>
           <GBPLocationSelector value={gbpLocationId} onChange={setGbpLocationId} />
           <input
+            id="gbpLocationId"
             type="text"
             value={gbpLocationId}
             onChange={(e) => setGbpLocationId(e.target.value)}
@@ -151,13 +147,17 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
         </h3>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
+          <label
+            htmlFor="recipientPhone"
+            className="block text-sm font-medium text-foreground mb-1"
+          >
             Recipient Phone
           </label>
           <p className="text-xs text-muted-foreground mb-2">
             Receive reports via SMS or WhatsApp (E.164 format, e.g., +61412345678)
           </p>
           <input
+            id="recipientPhone"
             type="tel"
             value={recipientPhone}
             onChange={(e) => setRecipientPhone(e.target.value)}

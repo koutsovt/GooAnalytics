@@ -85,10 +85,14 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }) {
     <div>
       {selected.size > 0 && (
         <div className="flex items-center justify-between mb-3 px-4 py-2 rounded-lg border border-border bg-muted/40">
-          <span className="text-sm text-foreground">
-            {selected.size} selected
-          </span>
-          <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+          <span className="text-sm text-foreground">{selected.size} selected</span>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
             {deleting ? "Deleting..." : "Delete selected"}
           </Button>
         </div>
@@ -152,18 +156,12 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }) {
                   className="h-4 w-4 cursor-pointer accent-brand align-middle"
                 />
               </th>
-              <th className="text-left px-6 py-3 text-sm font-semibold text-foreground">
-                Period
-              </th>
+              <th className="text-left px-6 py-3 text-sm font-semibold text-foreground">Period</th>
               <th className="text-left px-6 py-3 text-sm font-semibold text-foreground">
                 Subject Line
               </th>
-              <th className="text-left px-6 py-3 text-sm font-semibold text-foreground">
-                Status
-              </th>
-              <th className="text-left px-6 py-3 text-sm font-semibold text-foreground">
-                Created
-              </th>
+              <th className="text-left px-6 py-3 text-sm font-semibold text-foreground">Status</th>
+              <th className="text-left px-6 py-3 text-sm font-semibold text-foreground">Created</th>
               <th className="text-right px-6 py-3 text-sm font-semibold text-foreground">
                 Actions
               </th>
@@ -186,18 +184,14 @@ export function ReportsTable({ reports }: { reports: ReportRow[] }) {
                     className="h-4 w-4 cursor-pointer accent-brand align-middle"
                   />
                 </td>
-                <td className="px-6 py-4 text-sm text-foreground font-mono">
-                  {report.period}
-                </td>
+                <td className="px-6 py-4 text-sm text-foreground font-mono">{report.period}</td>
                 <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate">
                   {report.subjectLine || "—"}
                 </td>
                 <td className="px-6 py-4 text-sm">
                   <Badge variant={statusVariant(report.status)}>{report.status}</Badge>
                 </td>
-                <td className="px-6 py-4 text-sm text-muted-foreground">
-                  {report.createdAtLabel}
-                </td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">{report.createdAtLabel}</td>
                 <td className="px-6 py-4 text-right text-sm space-x-2">
                   <Link
                     href={`/reports/${report.id}`}

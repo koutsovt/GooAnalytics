@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { Line, LineChart, ResponsiveContainer } from "recharts";
 
 interface StatCardProps {
   label: string;
@@ -11,14 +11,7 @@ interface StatCardProps {
   sparkData?: Array<{ value: number }>;
 }
 
-export function StatCard({
-  label,
-  value,
-  delta,
-  unit,
-  comparison,
-  sparkData,
-}: StatCardProps) {
+export function StatCard({ label, value, delta, unit, comparison, sparkData }: StatCardProps) {
   const isDeltaPositive = delta !== undefined && delta >= 0;
   // A single point can't show a trend, so only draw the sparkline with ≥2 points.
   const hasSparkline = sparkData && sparkData.length >= 2;
@@ -44,25 +37,17 @@ export function StatCard({
             {delta !== undefined && (
               <span
                 className={`inline-flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded ${
-                  isDeltaPositive
-                    ? "bg-success/10 text-success"
-                    : "bg-danger/10 text-danger"
+                  isDeltaPositive ? "bg-success/10 text-success" : "bg-danger/10 text-danger"
                 }`}
               >
                 <span>{isDeltaPositive ? "↑" : "↓"}</span>
                 <span>{Math.abs(delta)}%</span>
               </span>
             )}
-            {comparison && (
-              <span className="text-xs text-muted-foreground">
-                {comparison}
-              </span>
-            )}
+            {comparison && <span className="text-xs text-muted-foreground">{comparison}</span>}
           </div>
 
-          {unit && (
-            <p className="text-xs text-muted-foreground mt-2">{unit}</p>
-          )}
+          {unit && <p className="text-xs text-muted-foreground mt-2">{unit}</p>}
         </div>
 
         {hasSparkline && (

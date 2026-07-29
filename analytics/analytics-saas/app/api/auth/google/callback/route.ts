@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 import { exchangeCodeForTokens, OAUTH_STATE_COOKIE, upsertTokenRow } from "@/lib/auth/google-oauth";
 import { setSessionCookie } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
 import { users } from "@/lib/db/schema";
+import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {

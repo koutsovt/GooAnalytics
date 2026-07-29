@@ -1,6 +1,6 @@
-import { listGA4Properties } from "@/lib/clients/ga4";
 import { getValidTokens } from "@/lib/auth/google-oauth";
 import { requireSession } from "@/lib/auth/session";
+import { listGA4Properties } from "@/lib/clients/ga4";
 
 export async function GET() {
   try {

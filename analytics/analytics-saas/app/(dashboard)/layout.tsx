@@ -24,6 +24,7 @@ export default function DashboardLayout({
     <div className="flex min-h-screen bg-background">
       {/* Mobile hamburger button */}
       <button
+        type="button"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="fixed top-4 left-4 z-40 md:hidden p-2 rounded-md hover:bg-muted"
         aria-label="Toggle menu"
@@ -37,7 +38,9 @@ export default function DashboardLayout({
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Close menu"
           className="fixed inset-0 bg-black/50 z-20 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -57,9 +60,7 @@ export default function DashboardLayout({
 
         <nav className="space-y-1">
           {navItems.map((item) => (
-            <div key={item.href} onClick={() => setSidebarOpen(false)}>
-              <NavLink {...item} />
-            </div>
+            <NavLink key={item.href} {...item} onClick={() => setSidebarOpen(false)} />
           ))}
         </nav>
       </aside>

@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { teamInvitations, teamMembers, users } from "@/lib/db/schema";
 import { AuditLogsViewer } from "@/components/dashboard/audit-logs-viewer";
+import type { teamInvitations, teamMembers, users } from "@/lib/db/schema";
 
 interface TeamPageContentProps {
   initialMembers: Array<typeof teamMembers.$inferSelect & { member: typeof users.$inferSelect }>;
@@ -104,10 +104,14 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
         <h2 className="text-2xl font-bold text-foreground mb-4">Invite a Team Member</h2>
         <form onSubmit={handleInvite} className="space-y-4">
           <div>
-            <label className="block text-base font-semibold text-foreground mb-2">
+            <label
+              htmlFor="inviteEmail"
+              className="block text-base font-semibold text-foreground mb-2"
+            >
               Email
             </label>
             <input
+              id="inviteEmail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -117,10 +121,14 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
             />
           </div>
           <div>
-            <label className="block text-base font-semibold text-foreground mb-2">
+            <label
+              htmlFor="inviteRole"
+              className="block text-base font-semibold text-foreground mb-2"
+            >
               Role
             </label>
             <select
+              id="inviteRole"
               value={role}
               onChange={(e) => setRole(e.target.value as "viewer" | "editor" | "admin")}
               className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
@@ -166,6 +174,7 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
                   </select>
                 </div>
                 <button
+                  type="button"
                   onClick={() => handleRemove(m.memberId)}
                   className="text-sm font-medium text-red-500 hover:underline"
                 >
@@ -198,12 +207,14 @@ export function TeamPageContent({ initialMembers, initialInvitations }: TeamPage
                 </div>
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => handleResendInvite(inv.id)}
                     className="text-sm font-medium text-brand hover:underline"
                   >
                     Resend
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleCancelInvite(inv.id)}
                     className="text-sm font-medium text-red-500 hover:underline"
                   >

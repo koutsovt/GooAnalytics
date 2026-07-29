@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
-import { requireSession } from "@/lib/auth/session";
+import { TeamPageContent } from "@/components/dashboard/team-page-content";
 import { resolveOwner } from "@/lib/auth/resolve-owner";
+import { requireSession } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { teamInvitations, teamMembers } from "@/lib/db/schema";
-import { TeamPageContent } from "@/components/dashboard/team-page-content";
 
 export default async function TeamPage() {
   const userId = await requireSession();

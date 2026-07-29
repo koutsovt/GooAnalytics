@@ -1,7 +1,8 @@
-import { test, expect } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-async function devLogin(page: any, email: string) {
-  await page.goto("/api/auth/dev-login?email=" + encodeURIComponent(email));
+async function devLogin(page: Page, email: string) {
+  await page.goto(`/api/auth/dev-login?email=${encodeURIComponent(email)}`);
   await page.waitForLoadState("networkidle");
   const url = page.url();
   if (url.includes("error")) {
@@ -45,5 +46,4 @@ test.describe("Properties Management", () => {
 
     await page.close();
   });
-
 });

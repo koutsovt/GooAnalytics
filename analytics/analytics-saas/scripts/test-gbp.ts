@@ -8,8 +8,9 @@
  * Google account manages (the resource name the config form needs), then pulls
  * live reviews for each. Pass a known "accounts/{a}/locations/{l}" to test one.
  */
+
+import { resolve } from "node:path";
 import { config as loadEnv } from "dotenv";
-import { resolve } from "path";
 
 loadEnv({ path: resolve(".env.local") });
 

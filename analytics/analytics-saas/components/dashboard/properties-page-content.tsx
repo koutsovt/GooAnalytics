@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ConfigForm } from "@/components/dashboard/config-form";
 import { DeleteConfigButton } from "@/components/dashboard/delete-config-button";
-import { reportConfigs } from "@/lib/db/schema";
+import type { reportConfigs } from "@/lib/db/schema";
 
 type Config = typeof reportConfigs.$inferSelect;
 
@@ -39,6 +39,7 @@ export function PropertiesPageContent({
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-foreground">Properties</h1>
         <button
+          type="button"
           onClick={() => setShowForm(true)}
           className="px-4 py-2 rounded-lg bg-brand text-white font-medium hover:bg-brand-dark transition-colors"
         >
@@ -64,6 +65,7 @@ export function PropertiesPageContent({
         <div className="rounded-lg border border-border bg-muted/30 p-8 text-center">
           <p className="text-muted-foreground mb-4">No properties yet</p>
           <button
+            type="button"
             onClick={() => setShowForm(true)}
             className="text-brand hover:underline font-medium"
           >
@@ -73,15 +75,10 @@ export function PropertiesPageContent({
       ) : (
         <div className="space-y-4">
           {configs.map((config) => (
-            <div
-              key={config.id}
-              className="rounded-lg border border-border bg-card p-6"
-            >
+            <div key={config.id} className="rounded-lg border border-border bg-card p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {config.gscSiteUrl}
-                  </h3>
+                  <h3 className="text-lg font-semibold text-foreground">{config.gscSiteUrl}</h3>
                   <dl className="mt-4 space-y-2 text-sm">
                     {config.ga4PropertyId && (
                       <div className="flex gap-4">
@@ -121,6 +118,7 @@ export function PropertiesPageContent({
                   </p>
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={() => setEditingConfig(config)}
                       className="text-brand hover:underline font-medium text-sm"
                     >

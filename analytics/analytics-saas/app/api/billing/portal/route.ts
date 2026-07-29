@@ -8,7 +8,7 @@ import { subscriptions } from "@/lib/db/schema";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
-export async function POST(_req: Request) {
+export async function POST() {
   try {
     const userId = await requireSession();
     const ownerId = await resolveOwner(userId);

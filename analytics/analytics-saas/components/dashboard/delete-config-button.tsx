@@ -46,6 +46,7 @@ export function DeleteConfigButton({ id, businessName }: DeleteConfigButtonProps
           </p>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={handleDelete}
               disabled={loading}
               className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
@@ -53,6 +54,7 @@ export function DeleteConfigButton({ id, businessName }: DeleteConfigButtonProps
               {loading ? "Deleting..." : "Delete"}
             </button>
             <button
+              type="button"
               onClick={() => setShowConfirm(false)}
               className="px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted"
             >
@@ -66,6 +68,7 @@ export function DeleteConfigButton({ id, businessName }: DeleteConfigButtonProps
 
   return (
     <button
+      type="button"
       onClick={() => setShowConfirm(true)}
       className="text-red-600 hover:text-red-700 font-medium text-sm"
     >

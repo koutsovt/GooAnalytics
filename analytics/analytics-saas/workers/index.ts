@@ -1,5 +1,5 @@
+import { join } from "node:path";
 import { config as configDotenv } from "dotenv";
-import { join } from "path";
 import { logger } from "@/lib/logger";
 
 configDotenv({ path: join(process.cwd(), ".env.local") });

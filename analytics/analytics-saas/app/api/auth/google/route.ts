@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAuthUrl, OAUTH_STATE_COOKIE } from "@/lib/auth/google-oauth";
 import { logger } from "@/lib/logger";

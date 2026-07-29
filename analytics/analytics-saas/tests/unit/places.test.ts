@@ -45,7 +45,15 @@ describe("fetchPlacesReputation", () => {
 
   it("maps rating/count and rounds the average from the matched place", async () => {
     mockFetchOnce(200, {
-      places: [{ id: "p1", displayName: { text: "Terence Salon" }, rating: 4.66, userRatingCount: 213, reviews: [] }],
+      places: [
+        {
+          id: "p1",
+          displayName: { text: "Terence Salon" },
+          rating: 4.66,
+          userRatingCount: 213,
+          reviews: [],
+        },
+      ],
     });
 
     const rep = await fetchPlacesReputation("Terence Salon", PERIOD_START, PERIOD_END);
@@ -66,7 +74,11 @@ describe("fetchPlacesReputation", () => {
           reviews: [
             { rating: 5, text: { text: "In period" }, publishTime: "2026-05-10T09:00:00Z" },
             { rating: 1, text: { text: "Too old" }, publishTime: "2026-04-15T09:00:00Z" },
-            { rating: 4, originalText: { text: "Fallback text" }, publishTime: "2026-05-20T09:00:00Z" },
+            {
+              rating: 4,
+              originalText: { text: "Fallback text" },
+              publishTime: "2026-05-20T09:00:00Z",
+            },
             { rating: 3, text: { text: "Future" }, publishTime: "2026-06-05T09:00:00Z" },
           ],
         },

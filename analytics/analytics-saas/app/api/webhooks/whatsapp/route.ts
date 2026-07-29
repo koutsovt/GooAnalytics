@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { logger } from "@/lib/logger";
 import { whatsappWebhookQueue } from "@/lib/queue";
 

@@ -23,9 +23,9 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
   const router = useRouter();
   const [selectedConfigId, setSelectedConfigId] = useState(configs[0]?.id ?? "");
   const [periodStart, setPeriodStart] = useState(
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
   );
-  const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split("T")[0]);
+  const [periodEnd, setPeriodEnd] = useState(() => new Date().toISOString().split("T")[0]);
   // `generating` stays true for the whole queued→polling window (~1-2 min), not
   // just the brief POST, so the button can't be re-clicked to queue duplicate
   // jobs while a report is still being built.
@@ -117,10 +117,14 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-2">
+            <label
+              htmlFor="generateReportConfig"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
               Property
             </label>
             <select
+              id="generateReportConfig"
               value={selectedConfigId}
               onChange={(e) => setSelectedConfigId(e.target.value)}
               className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
@@ -135,10 +139,14 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
+              <label
+                htmlFor="generateReportPeriodStart"
+                className="block text-sm font-medium text-muted-foreground mb-2"
+              >
                 Start Date
               </label>
               <input
+                id="generateReportPeriodStart"
                 type="date"
                 value={periodStart}
                 onChange={(e) => setPeriodStart(e.target.value)}
@@ -147,10 +155,14 @@ export function GenerateReportForm({ configs }: GenerateReportFormProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
+              <label
+                htmlFor="generateReportPeriodEnd"
+                className="block text-sm font-medium text-muted-foreground mb-2"
+              >
                 End Date
               </label>
               <input
+                id="generateReportPeriodEnd"
                 type="date"
                 value={periodEnd}
                 onChange={(e) => setPeriodEnd(e.target.value)}

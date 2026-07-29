@@ -5,8 +5,9 @@
  *
  *   npx tsx scripts/test-report-data.ts [configId]
  */
+
+import { resolve } from "node:path";
 import { config as loadEnv } from "dotenv";
-import { resolve } from "path";
 
 loadEnv({ path: resolve(".env.local") });
 

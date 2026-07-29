@@ -37,12 +37,12 @@ export async function GET(req: Request) {
     // Redirect to dashboard
     redirect("/dashboard");
   } catch (error) {
-    if ((error as any)?.digest?.startsWith("NEXT_REDIRECT")) {
+    if ((error as { digest?: string })?.digest?.startsWith("NEXT_REDIRECT")) {
       throw error;
     }
     logger.error("Dev login error:", error);
     return Response.json(
-      { error: "Dev login failed: " + (error instanceof Error ? error.message : "Unknown error") },
+      { error: `Dev login failed: ${error instanceof Error ? error.message : "Unknown error"}` },
       { status: 500 },
     );
   }

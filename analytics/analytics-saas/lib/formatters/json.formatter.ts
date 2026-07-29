@@ -9,7 +9,9 @@ export class JsonFormatter implements ChannelFormatter {
     try {
       return JSON.stringify(data, null, 2);
     } catch (error) {
-      throw new Error(`Failed to stringify report data: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to stringify report data: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import { google } from "googleapis";
 import { db } from "@/lib/db";

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { reportConfigs, teamMembers } from "@/lib/db/schema";
+import { teamMembers } from "@/lib/db/schema";
 
 export type TeamRole = "owner" | "admin" | "editor" | "viewer";
 

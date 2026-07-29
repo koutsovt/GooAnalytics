@@ -20,7 +20,11 @@ function buildPriorSection(data: BriefData, prior: PriorReport | undefined): str
   };
 
   const lines = [
-    delta("Website visits", prior.metrics.sessions, data.connections.ga4 ? data.website.sessions : null),
+    delta(
+      "Website visits",
+      prior.metrics.sessions,
+      data.connections.ga4 ? data.website.sessions : null,
+    ),
     delta("Search clicks", prior.metrics.searchClicks, data.search.clicks),
     delta(
       "Average rating",

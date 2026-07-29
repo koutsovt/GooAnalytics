@@ -100,7 +100,14 @@ export async function generateBriefWithGLM(
   jsonText = jsonText.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
   jsonText = escapeControlCharsInStrings(jsonText);
 
-  let parsed;
+  interface ParsedBrief {
+    summary?: string;
+    actions?: string[];
+    subjectLine?: string;
+    [key: string]: unknown;
+  }
+
+  let parsed: ParsedBrief;
   try {
     parsed = JSON.parse(jsonText);
   } catch (error) {

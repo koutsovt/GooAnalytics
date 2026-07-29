@@ -157,9 +157,9 @@ function DailyVisitsChart({ data }: { data: { date: string; sessions: number }[]
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Daily visits" className="w-full h-auto">
-      {gridYs.map((gy, i) => (
+      {gridYs.map((gy) => (
         <line
-          key={i}
+          key={gy}
           x1={padL}
           y1={gy}
           x2={padL + innerW}
@@ -759,7 +759,7 @@ export function ReportView({
           <SectionLabel>Where to focus next</SectionLabel>
           <div className="divide-y divide-border">
             {reportData.actions.map((action, i) => (
-              <div key={i} className="flex gap-5 py-4 first:pt-0 last:pb-0">
+              <div key={action} className="flex gap-5 py-4 first:pt-0 last:pb-0">
                 <span className="text-2xl font-bold italic text-brand leading-none w-8 shrink-0">
                   {i + 1}
                 </span>

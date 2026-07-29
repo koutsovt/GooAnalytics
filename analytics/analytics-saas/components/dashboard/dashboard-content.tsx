@@ -83,7 +83,9 @@ export function DashboardContent({ data }: { data: DashboardData }) {
         <StatCard
           label="Avg rating"
           value={data.gbpConnected ? data.rating.toFixed(1) : "—"}
-          unit={data.gbpConnected ? `${data.totalReviews.toLocaleString()} reviews` : "not connected"}
+          unit={
+            data.gbpConnected ? `${data.totalReviews.toLocaleString()} reviews` : "not connected"
+          }
           sparkData={data.gbpConnected ? data.ratingSpark : undefined}
         />
       </div>

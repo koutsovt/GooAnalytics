@@ -20,7 +20,5 @@ export default async function PropertiesPage() {
     }),
   ]);
 
-  return (
-    <PropertiesPageContent initialConfigs={configs} defaultEmail={currentUser?.email ?? ""} />
-  );
+  return <PropertiesPageContent initialConfigs={configs} defaultEmail={currentUser?.email ?? ""} />;
 }

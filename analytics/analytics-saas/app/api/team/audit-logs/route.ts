@@ -11,8 +11,8 @@ export async function GET(req: Request) {
     const pageParam = searchParams.get("page");
     const limitParam = searchParams.get("limit");
 
-    const page = pageParam ? Math.max(1, parseInt(pageParam)) : 1;
-    const pageLimit = limitParam ? Math.max(1, Math.min(100, parseInt(limitParam))) : 50;
+    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1;
+    const pageLimit = limitParam ? Math.max(1, Math.min(100, parseInt(limitParam, 10))) : 50;
     const offset = (page - 1) * pageLimit;
 
     const isTeamMember = await db.query.teamMembers.findFirst({

@@ -32,7 +32,13 @@ export function DeliverButton({ reportId }: DeliverButtonProps) {
   };
 
   return (
-    <Button variant="link" size="sm" onClick={handleDeliver} disabled={loading} className="h-auto p-0">
+    <Button
+      variant="link"
+      size="sm"
+      onClick={handleDeliver}
+      disabled={loading}
+      className="h-auto p-0"
+    >
       {loading ? "Queuing..." : "Deliver"}
     </Button>
   );

@@ -1,6 +1,6 @@
+import { join } from "node:path";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { config as configDotenv } from "dotenv";
-import { join } from "path";
 import { z } from "zod";
 
 configDotenv({ path: join(process.cwd(), ".env.local") });

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface GA4Property {
   propertyId: string;
@@ -59,7 +59,7 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
           <p className="font-medium text-red-800">Unable to load properties</p>
           <p className="text-sm text-red-700">{error}</p>
           <p className="text-xs text-red-600 mt-2">
-            Make sure you've authenticated with Google and have access to GA4 properties.
+            Make sure you&apos;ve authenticated with Google and have access to GA4 properties.
           </p>
         </div>
       </div>
@@ -81,6 +81,7 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
       {properties.map((property) => (
         <button
           key={property.propertyId}
+          type="button"
           onClick={() => onChange(property.propertyId)}
           className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
             value === property.propertyId
@@ -91,9 +92,7 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
           <div className="flex items-start gap-3">
             <div
               className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                value === property.propertyId
-                  ? "border-brand bg-brand"
-                  : "border-border"
+                value === property.propertyId ? "border-brand bg-brand" : "border-border"
               }`}
             >
               {value === property.propertyId && (
@@ -101,6 +100,7 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
                   className="w-3 h-3 text-white"
                   fill="currentColor"
                   viewBox="0 0 20 20"
+                  aria-hidden="true"
                 >
                   <path
                     fillRule="evenodd"

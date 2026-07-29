@@ -47,7 +47,7 @@ export function BillingActions({ mode, plan, label, variant }: BillingActionsPro
   if (mode === "active") {
     return (
       <Button onClick={() => post("/api/billing/portal")} disabled={loading} variant={variant}>
-        {loading ? "Loading..." : label ?? "Manage billing"}
+        {loading ? "Loading..." : (label ?? "Manage billing")}
       </Button>
     );
   }
@@ -59,7 +59,7 @@ export function BillingActions({ mode, plan, label, variant }: BillingActionsPro
       disabled={loading}
       variant={variant}
     >
-      {loading ? "Loading..." : label ?? "Start plan"}
+      {loading ? "Loading..." : (label ?? "Start plan")}
     </Button>
   );
 }
