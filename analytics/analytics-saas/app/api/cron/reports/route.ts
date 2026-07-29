@@ -24,7 +24,7 @@ export function computeReportWindow(
   };
 }
 
-function shouldRunNow(config: typeof reportConfigs.$inferSelect, now: Date): boolean {
+export function shouldRunNow(config: typeof reportConfigs.$inferSelect, now: Date): boolean {
   const tzStr = config.scheduleTimezone ?? "UTC";
   const [schedHour] = (config.scheduleTime ?? "09:00").split(":").map(Number);
 
@@ -58,6 +58,9 @@ function shouldRunNow(config: typeof reportConfigs.$inferSelect, now: Date): boo
 
   if (hour !== schedHour) return false;
 
+  if (config.scheduleFrequency === "daily") {
+    return true;
+  }
   if (config.scheduleFrequency === "weekly") {
     return weekday === (config.scheduleDayOfWeek ?? 1);
   }
