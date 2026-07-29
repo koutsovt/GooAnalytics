@@ -388,18 +388,19 @@ export function parseExtractResponse(content: string): ExtractResult | null {
     if (!name || !Number.isFinite(price) || price <= 0) continue;
     services.push({ name, price, raw: raw || String(price) });
   }
-  const currency = typeof obj.currency === "string" && obj.currency ? obj.currency : "GBP";
+  const currency = typeof obj.currency === "string" && obj.currency ? obj.currency : "AUD";
   return { currency, services: services.slice(0, 15) };
 }
 
 async function callExtractionLLM(
   pageText: string,
   businessName: string,
+  countryHint?: string,
 ): Promise<ExtractResult | null> {
   const apiKey = env.Z_AI_API_KEY;
   if (!apiKey || apiKey.length < 10) return null;
 
-  const prompt = buildCompetitorExtractPrompt(pageText, businessName);
+  const prompt = buildCompetitorExtractPrompt(pageText, businessName, countryHint);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60_000);
   try {
@@ -439,8 +440,9 @@ async function callExtractionLLM(
 export async function extractServicePrices(
   websiteUri: string,
   businessName: string,
+  countryHint?: string,
 ): Promise<ExtractResult> {
-  const empty: ExtractResult = { currency: "GBP", services: [] };
+  const empty: ExtractResult = { currency: "AUD", services: [] };
   if (!env.COMPETITOR_PRICES_ENABLED) return empty;
   if (!websiteUri) return empty;
 
@@ -449,7 +451,7 @@ export async function extractServicePrices(
     if (!html) return empty;
     const text = htmlToText(html);
     if (text.length < 40) return empty;
-    const result = await callExtractionLLM(text, businessName);
+    const result = await callExtractionLLM(text, businessName, countryHint);
     return result ?? empty;
   } catch (err) {
     logger.warn(

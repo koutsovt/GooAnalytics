@@ -71,11 +71,11 @@ describe("mapPriceLevel", () => {
 describe("parseExtractResponse", () => {
   it("parses a valid price list and strips ```json fences", () => {
     const res = parseExtractResponse(
-      '```json\n{"currency":"GBP","services":[{"name":"Men\'s Cut","price":35,"raw":"from £35"}]}\n```',
+      '```json\n{"currency":"AUD","services":[{"name":"Men\'s Cut","price":35,"raw":"from $35"}]}\n```',
     );
     expect(res).toEqual({
-      currency: "GBP",
-      services: [{ name: "Men's Cut", price: 35, raw: "from £35" }],
+      currency: "AUD",
+      services: [{ name: "Men's Cut", price: 35, raw: "from $35" }],
     });
   });
 
@@ -94,7 +94,7 @@ describe("parseExtractResponse", () => {
   it("coerces numeric-string prices and defaults raw + currency", () => {
     const res = parseExtractResponse('{"services":[{"name":"Cut","price":"18.5"}]}');
     expect(res).toEqual({
-      currency: "GBP",
+      currency: "AUD",
       services: [{ name: "Cut", price: 18.5, raw: "18.5" }],
     });
   });

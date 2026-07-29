@@ -48,6 +48,7 @@ async function main() {
     end,
     cfg.placeId ?? undefined,
     cfg.businessType ?? undefined,
+    cfg.scheduleTimezone ?? undefined,
   );
 
   console.log("connections:", JSON.stringify(data.connections));

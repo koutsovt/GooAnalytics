@@ -46,6 +46,7 @@ export const reportWorker = new Worker<ReportGenerationJob>(
         periodEnd,
         config.placeId ?? undefined,
         config.businessType ?? undefined,
+        config.scheduleTimezone ?? undefined,
       );
 
       // Loop-closing context from last month, fetched before we insert this one.

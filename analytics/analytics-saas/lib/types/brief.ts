@@ -59,7 +59,7 @@ export interface Competitor {
 }
 
 export interface CompetitorData {
-  currency: string; // inferred, default "GBP" for Terence London
+  currency: string; // inferred, default "AUD" for an Australian client base
   competitors: Competitor[]; // capped, nearest first
   ownServices: CompetitorService[]; // owner's own prices, same extraction path
   // Which metrics are actually COMPARABLE across the salons in this set, computed

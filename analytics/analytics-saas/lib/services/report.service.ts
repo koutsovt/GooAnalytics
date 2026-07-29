@@ -65,6 +65,7 @@ export async function generateReport(
     periodEnd,
     config.placeId ?? undefined,
     config.businessType ?? undefined,
+    config.scheduleTimezone ?? undefined,
   );
 
   // Loop-closing context: last month's actions + headline metrics. Fetched

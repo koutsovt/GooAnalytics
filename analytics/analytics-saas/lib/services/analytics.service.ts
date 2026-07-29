@@ -145,6 +145,7 @@ async function resolveCompetitors(
   businessName: string,
   businessType: string | undefined,
   placeId: string | undefined,
+  countryHint: string | undefined,
 ): Promise<{ data: CompetitorData | undefined; connected: boolean }> {
   if (!placeId || !env.GOOGLE_MAPS_API_KEY) {
     logger.info("Competitors skipped", {
@@ -181,15 +182,15 @@ async function resolveCompetitors(
       return { data: undefined, connected: false };
     }
 
-    let currency = "GBP";
+    let currency = "AUD";
     let ownServices: CompetitorData["ownServices"] = [];
 
     if (env.COMPETITOR_PRICES_ENABLED) {
       // Extract prices for the owner + each competitor in parallel, capped by the
       // list size (already ≤ 5). Each call swallows its own errors.
       const [own, ...enriched] = await Promise.all([
-        extractServicePrices(gscSiteUrl, businessName),
-        ...competitors.map((c) => extractServicePrices(c.websiteUri, c.name)),
+        extractServicePrices(gscSiteUrl, businessName, countryHint),
+        ...competitors.map((c) => extractServicePrices(c.websiteUri, c.name, countryHint)),
       ]);
       ownServices = own.services;
       if (own.services.length > 0) currency = own.currency;
@@ -215,6 +216,16 @@ async function resolveCompetitors(
   }
 }
 
+// Bare `$` is ambiguous across AUD/USD/NZD/CAD, so we give the extraction
+// prompt a light-touch country hint derived from the report config's
+// schedule timezone. Only handles the one case we actually need (an
+// Australia/* timezone) rather than a full IANA-to-country table — omit the
+// hint for anything else and let the prompt's own default (AUD) apply.
+function countryHintFromTimezone(scheduleTimezone: string | undefined): string | undefined {
+  if (scheduleTimezone?.startsWith("Australia/")) return "Australia";
+  return undefined;
+}
+
 export async function fetchAnalyticsData(
   businessName: string,
   ga4PropertyId: string | undefined,
@@ -225,7 +236,9 @@ export async function fetchAnalyticsData(
   periodEnd: string,
   placeId?: string,
   businessType?: string,
+  scheduleTimezone?: string,
 ): Promise<BriefData> {
+  const countryHint = countryHintFromTimezone(scheduleTimezone);
   const [{ website, local }, search, reputationResult, competitorResult] = await Promise.all([
     ga4PropertyId
       ? fetchGA4Data(ga4PropertyId, tokens, periodStart, periodEnd)
@@ -256,7 +269,7 @@ export async function fetchAnalyticsData(
       periodStart,
       periodEnd,
     ),
-    resolveCompetitors(gscSiteUrl, businessName, businessType, placeId),
+    resolveCompetitors(gscSiteUrl, businessName, businessType, placeId, countryHint),
   ]);
 
   return {
