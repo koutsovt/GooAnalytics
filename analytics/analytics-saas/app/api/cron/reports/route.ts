@@ -5,6 +5,25 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { reportQueue } from "@/lib/queue";
 
+// Reporting window length is driven by the config's schedule frequency, so a
+// weekly config gets one clean 7-day report instead of four overlapping
+// 30-day ones. Falls back to the ~30-day monthly window for "monthly" and any
+// unrecognized value. Kept in the same `.toISOString().split("T")[0]` style as
+// the rest of this file, consistent with computePriorPeriod in lib/clients/ga4.ts.
+export function computeReportWindow(
+  scheduleFrequency: string,
+  now: Date,
+): { periodStart: string; periodEnd: string } {
+  const windowDays = scheduleFrequency === "daily" ? 1 : scheduleFrequency === "weekly" ? 7 : 30;
+
+  const start = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
+
+  return {
+    periodStart: start.toISOString().split("T")[0],
+    periodEnd: now.toISOString().split("T")[0],
+  };
+}
+
 function shouldRunNow(config: typeof reportConfigs.$inferSelect, now: Date): boolean {
   const tzStr = config.scheduleTimezone ?? "UTC";
   const [schedHour] = (config.scheduleTime ?? "09:00").split(":").map(Number);
@@ -59,10 +78,6 @@ export async function GET(request: Request) {
     });
 
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const periodStart = thirtyDaysAgo.toISOString().split("T")[0];
-    const periodEnd = now.toISOString().split("T")[0];
 
     let queued = 0;
     let skipped = 0;
@@ -72,6 +87,8 @@ export async function GET(request: Request) {
         skipped++;
         continue;
       }
+
+      const { periodStart, periodEnd } = computeReportWindow(config.scheduleFrequency, now);
 
       try {
         await reportQueue.add(
