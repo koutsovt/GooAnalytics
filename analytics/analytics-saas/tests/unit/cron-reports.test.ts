@@ -11,7 +11,9 @@ vi.mock("@/lib/env", () => ({
   env: { CRON_SECRET: "test-secret-test-secret-test-secret" },
 }));
 
-const { computeReportWindow, shouldRunNow } = await import("@/app/api/cron/reports/route");
+const { computeReportWindow, shouldRunNow, GET } = await import("@/app/api/cron/reports/route");
+const { db } = await import("@/lib/db");
+const { reportQueue } = await import("@/lib/queue");
 
 type Config = typeof reportConfigs.$inferSelect;
 
@@ -121,5 +123,34 @@ describe("shouldRunNow", () => {
 
     const wrongDay = new Date("2024-07-16T09:00:00.000Z");
     expect(shouldRunNow(config, wrongDay)).toBe(false);
+  });
+});
+
+describe("GET", () => {
+  it("marks every enqueued report job as cron-triggered, so the worker auto-delivers it", async () => {
+    // GET reads the real current time internally (it isn't parameterized like
+    // shouldRunNow), so match the config's schedule to the current UTC hour
+    // rather than pinning a fixed time this test can't control.
+    const currentUtcHour = String(new Date().getUTCHours()).padStart(2, "0");
+    vi.mocked(db.query.reportConfigs.findMany).mockResolvedValue([
+      makeConfig({
+        scheduleFrequency: "daily",
+        scheduleTime: `${currentUtcHour}:00`,
+        scheduleTimezone: "UTC",
+      }),
+    ]);
+    vi.mocked(reportQueue.add).mockClear();
+
+    const request = new Request("https://example.com/api/cron/reports", {
+      headers: { authorization: "Bearer test-secret-test-secret-test-secret" },
+    });
+
+    const response = await GET(request);
+    expect(response.status).toBe(200);
+    expect(reportQueue.add).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ trigger: "cron" }),
+      expect.any(Object),
+    );
   });
 });

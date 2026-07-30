@@ -6,10 +6,8 @@ import { db } from "@/lib/db";
 import { reportHistory } from "@/lib/db/schema";
 import { logger } from "@/lib/logger";
 import { deliveryQueue } from "@/lib/queue";
-import type { ReportDeliveryJob } from "@/lib/queue/types";
+import { DELIVERY_CHANNELS, type ReportDeliveryJob } from "@/lib/queue/types";
 import { rateLimit } from "@/lib/rate-limit";
-
-const VALID_CHANNELS: ReportDeliveryJob["channels"] = ["email", "whatsapp", "slack", "json"];
 
 export async function POST(req: Request, { params }: { params: Promise<{ reportId: string }> }) {
   try {
@@ -42,7 +40,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ reportI
 
     const requested = Array.isArray(body.channels) ? body.channels : ["email"];
     const channels = requested.filter((c): c is ReportDeliveryJob["channels"][number] =>
-      (VALID_CHANNELS as string[]).includes(c as string),
+      (DELIVERY_CHANNELS as readonly string[]).includes(c as string),
     );
 
     if (channels.length === 0) {

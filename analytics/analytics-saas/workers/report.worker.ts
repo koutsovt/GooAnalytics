@@ -7,11 +7,39 @@ import { db, isUniqueConstraintViolation } from "@/lib/db";
 import { reportConfigs, reportHistory } from "@/lib/db/schema";
 import { logger } from "@/lib/logger";
 import { getRedisConnection } from "@/lib/queue/connection";
-import type { ReportGenerationJob } from "@/lib/queue/types";
+import { deliveryQueue } from "@/lib/queue/queues";
+import { parseDeliveryChannels, type ReportGenerationJob } from "@/lib/queue/types";
 import { fetchAnalyticsData } from "@/lib/services/analytics.service";
 import { getPriorReport } from "@/lib/services/report.service";
 
 const connection = getRedisConnection();
+
+// Scheduled (cron) runs have no one watching the dashboard to click
+// "Deliver", so a successful cron generation auto-enqueues its own delivery
+// using the config's saved channels. A delivery-enqueue failure here must
+// never flip an already-successful report to "failed" — it's logged and
+// swallowed so the client can still retry delivery manually from the
+// dashboard.
+async function autoDeliverIfCron(
+  job: Job<ReportGenerationJob>,
+  config: typeof reportConfigs.$inferSelect,
+  reportId: string,
+) {
+  if (job.data.trigger !== "cron") return;
+
+  const channels = parseDeliveryChannels(config.activeChannels);
+  try {
+    await deliveryQueue.add(
+      `delivery-${reportId}-${Date.now()}`,
+      { reportId, userId: config.userId, channels },
+      { attempts: 3, backoff: { type: "exponential", delay: 2000 }, removeOnComplete: false },
+    );
+    job.log(`Auto-delivery queued for channels: ${channels.join(", ")}`);
+    logger.info("Auto-delivery queued for cron report", { reportId, channels });
+  } catch (error) {
+    logger.error("Failed to auto-queue delivery for cron report", { reportId, error });
+  }
+}
 
 export const reportWorker = new Worker<ReportGenerationJob>(
   "reports",
@@ -91,6 +119,8 @@ export const reportWorker = new Worker<ReportGenerationJob>(
       }
 
       logger.info("Report saved", { reportId });
+
+      await autoDeliverIfCron(job, config, reportId);
 
       job.log("Report generation complete");
       return { reportId, status: "success" };

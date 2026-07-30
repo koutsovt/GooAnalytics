@@ -102,6 +102,9 @@ export async function GET(request: Request) {
             configId: config.id,
             periodStart,
             periodEnd,
+            // Marks this job so the worker auto-delivers on success — nobody
+            // is watching the dashboard to click "Deliver" for a scheduled run.
+            trigger: "cron",
           },
           {
             attempts: 3,
