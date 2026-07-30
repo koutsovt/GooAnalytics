@@ -88,34 +88,22 @@ export function PropertiesPageContent({
                         <dd className="font-mono text-foreground">{config.gscSiteUrl}</dd>
                       </div>
                     )}
-                    <div className="flex gap-4">
-                      <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
-                        Website traffic (GA4):
-                      </dt>
-                      <dd
-                        className={
-                          config.ga4PropertyId
-                            ? "font-mono text-foreground"
-                            : "text-muted-foreground italic"
-                        }
-                      >
-                        {config.ga4PropertyId || "Not connected — traffic data won’t appear"}
-                      </dd>
-                    </div>
-                    <div className="flex gap-4">
-                      <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
-                        Reviews (Business Profile):
-                      </dt>
-                      <dd
-                        className={
-                          config.gbpLocationId
-                            ? "font-mono text-foreground"
-                            : "text-muted-foreground italic"
-                        }
-                      >
-                        {config.gbpLocationId || "Not connected — review data won’t appear"}
-                      </dd>
-                    </div>
+                    {config.ga4PropertyId && (
+                      <div className="flex gap-4">
+                        <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
+                          Website traffic (GA4):
+                        </dt>
+                        <dd className="font-mono text-foreground">{config.ga4PropertyId}</dd>
+                      </div>
+                    )}
+                    {config.gbpLocationId && (
+                      <div className="flex gap-4">
+                        <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
+                          Reviews (Business Profile):
+                        </dt>
+                        <dd className="font-mono text-foreground">{config.gbpLocationId}</dd>
+                      </div>
+                    )}
                     {config.recipientEmail && (
                       <div className="flex gap-4">
                         <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">

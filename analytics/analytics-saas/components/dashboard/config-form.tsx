@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { GA4PropertySelector } from "@/components/dashboard/ga4-property-selector";
 import { GBPLocationSelector } from "@/components/dashboard/gbp-location-selector";
@@ -90,6 +90,12 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
   const scheduleDayOfWeek = config?.scheduleDayOfWeek ?? 1;
   const scheduleTime = config?.scheduleTime ?? "09:00";
   const scheduleTimezone = config?.scheduleTimezone ?? "Australia/Sydney";
+  // Collapsed by default so clients who don't know what GA4/GBP are never see
+  // them. Auto-opens when editing a config that already has one connected, so
+  // an existing connection is never hidden from the person who set it up.
+  const [dataSourcesOpen, setDataSourcesOpen] = useState(
+    Boolean(config?.ga4PropertyId || config?.gbpLocationId),
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -234,51 +240,79 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
       </div>
 
       <div className="pt-4 border-t border-border">
-        <h3 className="text-sm font-semibold text-foreground mb-1">
-          Extra Data Sources (Optional)
-        </h3>
-        <p className="text-xs text-muted-foreground mb-4">
-          Connect these to add more to every report. Neither is required — the Website URL above
-          already covers search performance. We’ll suggest a match once you’ve entered a matching
-          account, and pick it automatically when there’s only one obvious choice.
-        </p>
+        <button
+          type="button"
+          onClick={() => setDataSourcesOpen((open) => !open)}
+          aria-expanded={dataSourcesOpen}
+          aria-controls="data-sources-panel"
+          className="flex w-full items-center justify-between gap-4 text-left"
+        >
+          <span>
+            <h3 className="text-sm font-semibold text-foreground">Extra Data Sources (Optional)</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {dataSourcesOpen || ga4PropertyId || gbpLocationId
+                ? "Connect Google Analytics or a Business Profile to add more to every report."
+                : "Have Google Analytics or a Business Profile for this site? Connect them to add more to every report."}
+            </p>
+          </span>
+          <ChevronDown
+            className={cn(
+              "w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform",
+              dataSourcesOpen && "rotate-180",
+            )}
+            aria-hidden="true"
+          />
+        </button>
 
-        <div className="mb-4">
-          <span className="block text-sm font-medium text-foreground mb-1">GA4 Property</span>
-          <p className="text-xs text-muted-foreground mb-3">
-            Adds website traffic to the report: sessions, top pages, traffic sources, and device
-            breakdown. Pick the Google Analytics 4 property tied to this website.
-          </p>
-          <GA4PropertySelector
-            value={ga4PropertyId}
-            onChange={setGa4PropertyId}
-            websiteUrl={gscSiteUrl}
-          />
-        </div>
+        {dataSourcesOpen && (
+          <div id="data-sources-panel" className="mt-4">
+            <p className="text-xs text-muted-foreground mb-4">
+              Neither is required — the Website URL above already covers search performance. We’ll
+              suggest a match once you’ve entered a matching account, and pick it automatically when
+              there’s only one obvious choice.
+            </p>
 
-        <div>
-          <label htmlFor="gbpLocationId" className="block text-sm font-medium text-foreground mb-1">
-            Google Business Profile Location
-          </label>
-          <p className="text-xs text-muted-foreground mb-3">
-            Adds local performance to the report: customer reviews, star rating, calls, and
-            direction requests. Pick the location for this business. If none appear, enter the
-            location resource name manually below.
-          </p>
-          <GBPLocationSelector
-            value={gbpLocationId}
-            onChange={setGbpLocationId}
-            websiteUrl={gscSiteUrl}
-          />
-          <input
-            id="gbpLocationId"
-            type="text"
-            value={gbpLocationId}
-            onChange={(e) => setGbpLocationId(e.target.value)}
-            className={inputClasses(false, "mt-3")}
-            placeholder="e.g., accounts/123456789/locations/987654321"
-          />
-        </div>
+            <div className="mb-4">
+              <span className="block text-sm font-medium text-foreground mb-1">GA4 Property</span>
+              <p className="text-xs text-muted-foreground mb-3">
+                Adds website traffic to the report: sessions, top pages, traffic sources, and device
+                breakdown. Pick the Google Analytics 4 property tied to this website.
+              </p>
+              <GA4PropertySelector
+                value={ga4PropertyId}
+                onChange={setGa4PropertyId}
+                websiteUrl={gscSiteUrl}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="gbpLocationId"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
+                Google Business Profile Location
+              </label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Adds local performance to the report: customer reviews, star rating, calls, and
+                direction requests. Pick the location for this business. If none appear, enter the
+                location resource name manually below.
+              </p>
+              <GBPLocationSelector
+                value={gbpLocationId}
+                onChange={setGbpLocationId}
+                websiteUrl={gscSiteUrl}
+              />
+              <input
+                id="gbpLocationId"
+                type="text"
+                value={gbpLocationId}
+                onChange={(e) => setGbpLocationId(e.target.value)}
+                className={inputClasses(false, "mt-3")}
+                placeholder="e.g., accounts/123456789/locations/987654321"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="pt-4 border-t border-border">
