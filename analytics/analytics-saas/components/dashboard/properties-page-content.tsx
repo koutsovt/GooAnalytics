@@ -80,33 +80,55 @@ export function PropertiesPageContent({
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">{config.gscSiteUrl}</h3>
                   <dl className="mt-4 space-y-2 text-sm">
-                    {config.ga4PropertyId && (
-                      <div className="flex gap-4">
-                        <dt className="font-medium text-muted-foreground">GA4 ID:</dt>
-                        <dd className="font-mono text-foreground">{config.ga4PropertyId}</dd>
-                      </div>
-                    )}
                     {config.gscSiteUrl && (
                       <div className="flex gap-4">
-                        <dt className="font-medium text-muted-foreground">GSC URL:</dt>
+                        <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
+                          Search performance:
+                        </dt>
                         <dd className="font-mono text-foreground">{config.gscSiteUrl}</dd>
                       </div>
                     )}
-                    {config.gbpLocationId && (
-                      <div className="flex gap-4">
-                        <dt className="font-medium text-muted-foreground">GBP ID:</dt>
-                        <dd className="font-mono text-foreground">{config.gbpLocationId}</dd>
-                      </div>
-                    )}
+                    <div className="flex gap-4">
+                      <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
+                        Website traffic (GA4):
+                      </dt>
+                      <dd
+                        className={
+                          config.ga4PropertyId
+                            ? "font-mono text-foreground"
+                            : "text-muted-foreground italic"
+                        }
+                      >
+                        {config.ga4PropertyId || "Not connected — traffic data won’t appear"}
+                      </dd>
+                    </div>
+                    <div className="flex gap-4">
+                      <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
+                        Reviews (Business Profile):
+                      </dt>
+                      <dd
+                        className={
+                          config.gbpLocationId
+                            ? "font-mono text-foreground"
+                            : "text-muted-foreground italic"
+                        }
+                      >
+                        {config.gbpLocationId || "Not connected — review data won’t appear"}
+                      </dd>
+                    </div>
                     {config.recipientEmail && (
                       <div className="flex gap-4">
-                        <dt className="font-medium text-muted-foreground">Email:</dt>
+                        <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
+                          Sent to:
+                        </dt>
                         <dd className="text-foreground">{config.recipientEmail}</dd>
                       </div>
                     )}
                     {config.recipientPhone && (
                       <div className="flex gap-4">
-                        <dt className="font-medium text-muted-foreground">Phone:</dt>
+                        <dt className="font-medium text-muted-foreground w-44 flex-shrink-0">
+                          Also texted to:
+                        </dt>
                         <dd className="text-foreground">{config.recipientPhone}</dd>
                       </div>
                     )}

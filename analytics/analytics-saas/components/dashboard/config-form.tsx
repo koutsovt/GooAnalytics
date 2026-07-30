@@ -174,7 +174,8 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
           Website URL <RequiredMark />
         </label>
         <p className="text-xs text-muted-foreground mb-2">
-          Your website domain (required for search data and analytics)
+          Powers Search Console data in every report — keyword rankings, search clicks, and
+          impressions. This is the only source every report needs.
         </p>
         <div className="relative">
           <input
@@ -233,14 +234,26 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
       </div>
 
       <div className="pt-4 border-t border-border">
-        <h3 className="text-sm font-semibold text-foreground mb-4">Data Sources (Optional)</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-1">
+          Extra Data Sources (Optional)
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Connect these to add more to every report. Neither is required — the Website URL above
+          already covers search performance. We’ll suggest a match once you’ve entered a matching
+          account, and pick it automatically when there’s only one obvious choice.
+        </p>
 
         <div className="mb-4">
           <span className="block text-sm font-medium text-foreground mb-1">GA4 Property</span>
           <p className="text-xs text-muted-foreground mb-3">
-            Select your Google Analytics 4 property to pull visitor and event data
+            Adds website traffic to the report: sessions, top pages, traffic sources, and device
+            breakdown. Pick the Google Analytics 4 property tied to this website.
           </p>
-          <GA4PropertySelector value={ga4PropertyId} onChange={setGa4PropertyId} />
+          <GA4PropertySelector
+            value={ga4PropertyId}
+            onChange={setGa4PropertyId}
+            websiteUrl={gscSiteUrl}
+          />
         </div>
 
         <div>
@@ -248,10 +261,15 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
             Google Business Profile Location
           </label>
           <p className="text-xs text-muted-foreground mb-3">
-            Select the location to pull reviews from. If none appear, enter the location resource
-            name manually below.
+            Adds local performance to the report: customer reviews, star rating, calls, and
+            direction requests. Pick the location for this business. If none appear, enter the
+            location resource name manually below.
           </p>
-          <GBPLocationSelector value={gbpLocationId} onChange={setGbpLocationId} />
+          <GBPLocationSelector
+            value={gbpLocationId}
+            onChange={setGbpLocationId}
+            websiteUrl={gscSiteUrl}
+          />
           <input
             id="gbpLocationId"
             type="text"
