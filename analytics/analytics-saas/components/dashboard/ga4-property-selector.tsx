@@ -82,7 +82,7 @@ export function GA4PropertySelector({ value, onChange }: GA4PropertySelectorProp
         <button
           key={property.propertyId}
           type="button"
-          onClick={() => onChange(property.propertyId)}
+          onClick={() => onChange(value === property.propertyId ? "" : property.propertyId)}
           className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
             value === property.propertyId
               ? "border-brand bg-brand/5"

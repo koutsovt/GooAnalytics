@@ -1,16 +1,75 @@
 "use client";
 
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { GA4PropertySelector } from "@/components/dashboard/ga4-property-selector";
 import { GBPLocationSelector } from "@/components/dashboard/gbp-location-selector";
 import { Button } from "@/components/ui/button";
 import type { reportConfigs } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
+import { createConfigSchema } from "@/lib/validation";
 
 interface ConfigFormProps {
   config?: typeof reportConfigs.$inferSelect;
   defaultEmail?: string;
   onClose?: () => void;
   onSuccess?: () => void | Promise<void>;
+}
+
+type RequiredField = "gscSiteUrl" | "recipientEmail";
+
+// Validated against the exact schema the API enforces (lib/validation.ts), so
+// a field never shows "looks fine" here and then fails on submit.
+function fieldError(field: RequiredField, value: string): string | null {
+  if (!value.trim()) {
+    return field === "gscSiteUrl" ? "Website URL is required" : "Recipient email is required";
+  }
+  const result = createConfigSchema.shape[field].safeParse(value);
+  if (!result.success) {
+    return field === "gscSiteUrl"
+      ? "Enter a full URL, including https://"
+      : "Enter a valid email address";
+  }
+  return null;
+}
+
+// A phone number that doesn't look like E.164 still saves fine (the API only
+// caps length), so this is a non-blocking style hint, not an error.
+function phoneHint(value: string): string | null {
+  if (!value.trim()) return null;
+  return /^\+[1-9]\d{6,14}$/.test(value.trim())
+    ? null
+    : "Looks unusual — E.164 format starts with + and the country code, e.g. +61412345678";
+}
+
+function inputClasses(hasError: boolean, extra?: string) {
+  return cn(
+    "w-full px-3 py-2 rounded-lg border bg-input text-foreground transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    hasError ? "border-danger focus-visible:ring-danger" : "border-border focus-visible:ring-ring",
+    extra,
+  );
+}
+
+function RequiredMark() {
+  return (
+    <>
+      <span aria-hidden="true" className="text-danger">
+        *
+      </span>
+      <span className="sr-only"> required</span>
+    </>
+  );
+}
+
+function FieldError({ id, message }: { id: string; message: string | null }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs text-danger">
+      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+      {message}
+    </p>
+  );
 }
 
 export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigFormProps) {
@@ -34,8 +93,35 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // A field's error only surfaces once the user has left it (or tried to
+  // submit) — not on every keystroke, which would flag "required" before
+  // they've had a chance to type anything.
+  const [touched, setTouched] = useState<Record<RequiredField, boolean>>({
+    gscSiteUrl: false,
+    recipientEmail: false,
+  });
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const markTouched = (field: RequiredField) => setTouched((t) => ({ ...t, [field]: true }));
+
+  const gscSiteUrlError = fieldError("gscSiteUrl", gscSiteUrl);
+  const recipientEmailError = fieldError("recipientEmail", recipientEmail);
+  const showGscSiteUrlError = (touched.gscSiteUrl || submitAttempted) && gscSiteUrlError;
+  const showRecipientEmailError =
+    (touched.recipientEmail || submitAttempted) && recipientEmailError;
+  const phoneWarning = phoneTouched ? phoneHint(recipientPhone) : null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitAttempted(true);
+    setTouched({ gscSiteUrl: true, recipientEmail: true });
+
+    if (gscSiteUrlError || recipientEmailError) {
+      const firstInvalidId = gscSiteUrlError ? "gscSiteUrl" : "recipientEmail";
+      document.getElementById(firstInvalidId)?.focus();
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -75,38 +161,74 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      <p className="text-xs text-muted-foreground -mt-1">
+        <span className="text-danger" aria-hidden="true">
+          *
+        </span>{" "}
+        Required field
+      </p>
+
       <div>
         <label htmlFor="gscSiteUrl" className="block text-sm font-medium text-foreground mb-1">
-          Website URL *
+          Website URL <RequiredMark />
         </label>
         <p className="text-xs text-muted-foreground mb-2">
           Your website domain (required for search data and analytics)
         </p>
-        <input
-          id="gscSiteUrl"
-          type="text"
-          value={gscSiteUrl}
-          onChange={(e) => setGscSiteUrl(e.target.value)}
-          required
-          className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
-          placeholder="e.g., https://example.com"
-        />
+        <div className="relative">
+          <input
+            id="gscSiteUrl"
+            type="text"
+            value={gscSiteUrl}
+            onChange={(e) => setGscSiteUrl(e.target.value)}
+            onBlur={() => markTouched("gscSiteUrl")}
+            required
+            aria-required="true"
+            aria-invalid={!!showGscSiteUrlError}
+            aria-describedby={showGscSiteUrlError ? "gscSiteUrl-error" : undefined}
+            className={inputClasses(!!showGscSiteUrlError, "pr-9")}
+            placeholder="e.g., https://example.com"
+          />
+          {!showGscSiteUrlError && touched.gscSiteUrl && gscSiteUrl.trim() && (
+            <CheckCircle2
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-success pointer-events-none"
+              aria-hidden="true"
+            />
+          )}
+        </div>
+        <FieldError id="gscSiteUrl-error" message={showGscSiteUrlError ? gscSiteUrlError : null} />
       </div>
 
       <div>
         <label htmlFor="recipientEmail" className="block text-sm font-medium text-foreground mb-1">
-          Recipient Email *
+          Recipient Email <RequiredMark />
         </label>
         <p className="text-xs text-muted-foreground mb-2">Where to send your analytics reports</p>
-        <input
-          id="recipientEmail"
-          type="email"
-          value={recipientEmail}
-          onChange={(e) => setRecipientEmail(e.target.value)}
-          required
-          className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
-          placeholder="e.g., reports@example.com"
+        <div className="relative">
+          <input
+            id="recipientEmail"
+            type="email"
+            value={recipientEmail}
+            onChange={(e) => setRecipientEmail(e.target.value)}
+            onBlur={() => markTouched("recipientEmail")}
+            required
+            aria-required="true"
+            aria-invalid={!!showRecipientEmailError}
+            aria-describedby={showRecipientEmailError ? "recipientEmail-error" : undefined}
+            className={inputClasses(!!showRecipientEmailError, "pr-9")}
+            placeholder="e.g., reports@example.com"
+          />
+          {!showRecipientEmailError && touched.recipientEmail && recipientEmail.trim() && (
+            <CheckCircle2
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-success pointer-events-none"
+              aria-hidden="true"
+            />
+          )}
+        </div>
+        <FieldError
+          id="recipientEmail-error"
+          message={showRecipientEmailError ? recipientEmailError : null}
         />
       </div>
 
@@ -135,7 +257,7 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
             type="text"
             value={gbpLocationId}
             onChange={(e) => setGbpLocationId(e.target.value)}
-            className="w-full mt-3 px-3 py-2 rounded-lg border border-border bg-input text-foreground"
+            className={inputClasses(false, "mt-3")}
             placeholder="e.g., accounts/123456789/locations/987654321"
           />
         </div>
@@ -153,22 +275,33 @@ export function ConfigForm({ config, defaultEmail, onClose, onSuccess }: ConfigF
           >
             Recipient Phone
           </label>
-          <p className="text-xs text-muted-foreground mb-2">
-            Receive reports via SMS or WhatsApp (E.164 format, e.g., +61412345678)
+          <p
+            className={cn("text-xs mb-2", phoneWarning ? "text-warning" : "text-muted-foreground")}
+          >
+            {phoneWarning ??
+              "Receive reports via SMS or WhatsApp (E.164 format, e.g., +61412345678)"}
           </p>
           <input
             id="recipientPhone"
             type="tel"
             value={recipientPhone}
             onChange={(e) => setRecipientPhone(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-input text-foreground"
+            onBlur={() => setPhoneTouched(true)}
+            className={inputClasses(false)}
             placeholder="e.g., +1234567890"
           />
         </div>
       </div>
 
+      {submitAttempted && (gscSiteUrlError || recipientEmailError) && (
+        <p role="alert" className="text-sm text-danger flex items-center gap-1.5">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+          Please fix the highlighted field{gscSiteUrlError && recipientEmailError ? "s" : ""} above.
+        </p>
+      )}
+
       {error && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-700 dark:text-red-400">
+        <div className="p-3 bg-danger/10 border border-danger/30 rounded text-sm text-danger">
           {error}
         </div>
       )}
